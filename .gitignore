@@ -2,5 +2,7 @@
 .DS_Store
 build/
 dist/opt/*
+dist/srv/*
 
 !dist/opt/README.md
+!dist/srv/README.md
