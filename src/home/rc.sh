@@ -7,17 +7,24 @@
 # 1. Optimizing the PATH variable
 #
 
+# Temporary reset the PATH variable to its default value
+PATH="$(command -p getconf PATH)"
+
+# Start designing a new PATH variable from scratch
 __dotfiles_rc__optimized_PATH=''
 
 # Exclude symlinked /bin from systemd file hierarchy
-[ ! -L '/bin' ] && __dotfiles_rc__optimized_PATH=':/bin'
+[ ! -L '/bin' -a -e '/bin' ] && __dotfiles_rc__optimized_PATH=':/bin'
 
+# The secondary hierarchy should always be present
 __dotfiles_rc__optimized_PATH="/usr/bin$__dotfiles_rc__optimized_PATH"
 
-if [ -e '/usr/local/bin' ]; then
+# Exclude the tertiary hierarchy when not present (whysoever)
+if [ -d '/usr/local/bin' -a -r '/usr/local/bin' ]; then
   __dotfiles_rc__optimized_PATH="/usr/local/bin:$__dotfiles_rc__optimized_PATH"
 fi
 
+# Finally, overwrite the PATH variable locally (will be exported later)
 PATH="$__dotfiles_rc__optimized_PATH"
 
 unset __dotfiles_rc__optimized_PATH
@@ -26,10 +33,11 @@ unset __dotfiles_rc__optimized_PATH
 # 2. Adding user-specific directories to the PATH variable
 #
 
-[ -e "${HOME:=}/.bin" ] && PATH="$HOME/.bin:$PATH"
+# Include the ~/.bin directory provided by the dotfiles base package
+[ -d "${HOME:=}/.bin" ] && PATH="$HOME/.bin:$PATH"
 
-# Include the fixed ~/.local directory when present
-[ -e "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
+# Include the fixed ~/.local directory when present (quaternary hierarchy)
+[ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 
 #
 # 3. Exporting the modified PATH variable
