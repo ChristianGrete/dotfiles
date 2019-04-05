@@ -34,13 +34,27 @@ unset __dotfiles_rc__optimized_PATH
 #
 
 # Include the ~/.bin directory provided by the dotfiles base package
-[ -d "${HOME:=}/.bin" ] && PATH="$HOME/.bin:$PATH"
+[ -d "${HOME:=}/.bin" -a -r "$HOME/.bin" ] && PATH="$HOME/.bin:$PATH"
 
 # Include the fixed ~/.local directory when present (quaternary hierarchy)
-[ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
+[ -d "$HOME/.local/bin" -a -r "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 
 #
 # 3. Exporting the modified PATH variable
 #
 
 export PATH
+
+#
+# 4. Importing any other modified environment variables
+#
+
+# Load the ~/.env file provided by the dotfiles base package
+[ -r "$HOME/.env" ] && . "$HOME/.env"
+
+#
+# 5. Importing aliases
+#
+
+# Load the ~/.aliases file provided by the dotfiles base package
+[ -r "$HOME/.aliases" ] && . "$HOME/.aliases"
