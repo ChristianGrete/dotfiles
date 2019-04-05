@@ -1,0 +1,5 @@
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias c='command clear'
+alias lo='command logout'
