@@ -7,10 +7,8 @@
 # 1. Quitting on non-interactive shells
 #
 
-# Check whether the -i option is specified or stdin is associated with a terminal [1]
+# Check whether the -i option is specified or stdin is associated with a terminal [1][2]
 [ "${-#*i}" != "$-" ] || [ -t 0 -o -p '/dev/stdin' ] || return
-
-# NOTE [1]: Bash instead checks whether PS1 is not empty, but that seems somehow dumb as it fails on blank prompts.
 
 #
 # 2. Optimizing the PATH variable
@@ -58,10 +56,8 @@ export PATH
 # 5. Importing the dotfiles base package runcom
 #
 
-# Load the generated ~/.rc.d/localhost/dotfiles.sh file provided by the doftiles base package [2]
+# Load the generated ~/.rc.d/localhost/dotfiles.sh file provided by the doftiles base package [3]
 [ -r "$HOME/.rc.d/localhost/dotfiles.sh" ] && . "$HOME/.rc.d/localhost/dotfiles.sh"
-
-# NOTE [2]: This file provides major dotfiles environment variables.
 
 #
 # 6. Importing any other modified environment variables
@@ -76,3 +72,13 @@ export PATH
 
 # Load the ~/.aliases file provided by the dotfiles base package
 [ -r "$HOME/.aliases" ] && . "$HOME/.aliases"
+
+#
+# NOTES:
+#  [1]  Bash instead checks whether PS1 is not empty to determine interactive shells, but that seems somehow dumb as it
+#       fails when the user decides to set a blank prompt.
+#  [2]  Since `test -t 0` fails when invoked remotely via SSH (see https://www.tldp.org/LDP/abs/html/intandnonint.html),
+#       it is also checked whether stdin is instead a named pipe.
+#  [3]  The ~/.rc.d/localhost/dotfiles.sh runcom provides major dotfiles environment variables that are used by dotfiles
+#       itself and dotfiles packages that have been installed in addition.
+#
