@@ -43,7 +43,7 @@ unset __dotfiles_rc__optimized_PATH
 #
 
 # Include the ~/.bin directory provided by the dotfiles base package
-[ -d "${HOME:=}/.bin" -a -r "$HOME/.bin" ] && PATH="$HOME/.bin:$PATH"
+[ -d "$HOME/.bin" -a -r "$HOME/.bin" ] && PATH="$HOME/.bin:$PATH"
 
 # Include the fixed ~/.local directory when present (quaternary hierarchy)
 [ -d "$HOME/.local/bin" -a -r "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
