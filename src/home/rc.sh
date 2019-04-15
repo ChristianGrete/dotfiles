@@ -7,10 +7,10 @@
 # 1. Quitting on non-interactive shells
 #
 
-# Check whether the -i option is specified or stdin is associated with a terminal
+# Check whether the -i option is specified or stdin is associated with a terminal [1]
 [ "${-#*i}" != "$-" ] || [ -t 0 -o -p '/dev/stdin' ] || return
 
-# Note: Bash instead checks whether PS1 is not empty, but that seems somehow dumb as it fails on blank prompts
+# NOTE [1]: Bash instead checks whether PS1 is not empty, but that seems somehow dumb as it fails on blank prompts.
 
 #
 # 2. Optimizing the PATH variable
@@ -55,14 +55,23 @@ unset __dotfiles_rc__optimized_PATH
 export PATH
 
 #
-# 5. Importing any other modified environment variables
+# 5. Importing the dotfiles base package runcom
+#
+
+# Load the generated ~/.rc.d/localhost/dotfiles.sh file provided by the doftiles base package [2]
+[ -r "$HOME/.rc.d/localhost/dotfiles.sh" ] && . "$HOME/.rc.d/localhost/dotfiles.sh"
+
+# NOTE [2]: This file provides major dotfiles environment variables.
+
+#
+# 6. Importing any other modified environment variables
 #
 
 # Load the ~/.env file provided by the dotfiles base package
 [ -r "$HOME/.env" ] && . "$HOME/.env"
 
 #
-# 6. Importing aliases
+# 7. Importing aliases
 #
 
 # Load the ~/.aliases file provided by the dotfiles base package
