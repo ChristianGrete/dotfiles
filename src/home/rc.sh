@@ -4,7 +4,16 @@
 #
 
 #
-# 1. Optimizing the PATH variable
+# 1. Quitting on non-interactive shells
+#
+
+# Check whether the -i option is specified or stdin is associated with a terminal
+[ "${-#*i}" != "$-" ] || [ -t 0 -o -p '/dev/stdin' ] || return
+
+# Note: Bash instead checks whether PS1 is not empty, but that seems somehow dumb as it fails on blank prompts
+
+#
+# 2. Optimizing the PATH variable
 #
 
 # Temporary reset the PATH variable to its default value
@@ -30,7 +39,7 @@ PATH="$__dotfiles_rc__optimized_PATH"
 unset __dotfiles_rc__optimized_PATH
 
 #
-# 2. Adding user-specific directories to the PATH variable
+# 3. Adding user-specific directories to the PATH variable
 #
 
 # Include the ~/.bin directory provided by the dotfiles base package
@@ -40,20 +49,20 @@ unset __dotfiles_rc__optimized_PATH
 [ -d "$HOME/.local/bin" -a -r "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 
 #
-# 3. Exporting the modified PATH variable
+# 4. Exporting the modified PATH variable
 #
 
 export PATH
 
 #
-# 4. Importing any other modified environment variables
+# 5. Importing any other modified environment variables
 #
 
 # Load the ~/.env file provided by the dotfiles base package
 [ -r "$HOME/.env" ] && . "$HOME/.env"
 
 #
-# 5. Importing aliases
+# 6. Importing aliases
 #
 
 # Load the ~/.aliases file provided by the dotfiles base package
