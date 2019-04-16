@@ -76,11 +76,13 @@ if [ -d "$__dotfiles_rc__rc_dir" -a -r "$__dotfiles_rc__rc_dir" ]; then
   for __dotfiles_rc__rc_provider_path in $(ls -1 "$__dotfiles_rc__rc_dir"); do
     __dotfiles_rc__rc_provider_path="$__dotfiles_rc__rc_dir/$__dotfiles_rc__rc_provider_path"
 
+    # Accept readable subdirectories only
     [ -d "$__dotfiles_rc__rc_provider_path" -a -r "$__dotfiles_rc__rc_provider_path" ] || continue
 
     for __dotfiles_rc__rc_source_path in $(ls -1 "$__dotfiles_rc__rc_provider_path"); do
       __dotfiles_rc__rc_source_path="$__dotfiles_rc__rc_provider_path/$__dotfiles_rc__rc_source_path"
 
+      # Accept readable shell scripts only [7]
       [ -f "$__dotfiles_rc__rc_source_path" -a -r "$__dotfiles_rc__rc_source_path" ] && \
         [ "${__dotfiles_rc__rc_source_path%.sh}" != "$__dotfiles_rc__rc_source_path" ] && \
           . "$__dotfiles_rc__rc_source_path"
@@ -105,4 +107,6 @@ unset -v '__dotfiles_rc__rc_dir'
 #  [5]  The systemd file hierarchy also defines a fixed directory structure for high-level user resources (see
 #       https://www.freedesktop.org/software/systemd/man/file-hierarchy.html#Home%20Directory).
 #  [6]  Additional runcoms can be put into subdirectories of ~/.rc.d whose names must be the respective provider's FQDN.
+#  [7]  Runcoms with file extensions other than .sh need to be loaded by their respective programs, e.g. .bash by Bash
+#       using ~/.bashrc or .zsh by Zsh using ~/.zshrc.
 #
