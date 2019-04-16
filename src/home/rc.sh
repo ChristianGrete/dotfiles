@@ -76,15 +76,15 @@ if [ -d "$__dotfiles_rc__rc_dir" -a -r "$__dotfiles_rc__rc_dir" ]; then
   for __dotfiles_rc__rc_provider_path in $(ls -1 "$__dotfiles_rc__rc_dir"); do
     __dotfiles_rc__rc_provider_path="$__dotfiles_rc__rc_dir/$__dotfiles_rc__rc_provider_path"
 
-    if [ -d "$__dotfiles_rc__rc_provider_path" -a -r "$__dotfiles_rc__rc_provider_path" ]; then
-      for __dotfiles_rc__rc_source_path in $(ls -1 "$__dotfiles_rc__rc_provider_path"); do
-        __dotfiles_rc__rc_source_path="$__dotfiles_rc__rc_provider_path/$__dotfiles_rc__rc_source_path"
+    [ -d "$__dotfiles_rc__rc_provider_path" -a -r "$__dotfiles_rc__rc_provider_path" ] || continue
 
-        [ -f "$__dotfiles_rc__rc_source_path" -a -r "$__dotfiles_rc__rc_source_path" ] && \
-          [ "${__dotfiles_rc__rc_source_path%.sh}" != "$__dotfiles_rc__rc_source_path" ] && \
-            . "$__dotfiles_rc__rc_source_path"
-      done
-    fi
+    for __dotfiles_rc__rc_source_path in $(ls -1 "$__dotfiles_rc__rc_provider_path"); do
+      __dotfiles_rc__rc_source_path="$__dotfiles_rc__rc_provider_path/$__dotfiles_rc__rc_source_path"
+
+      [ -f "$__dotfiles_rc__rc_source_path" -a -r "$__dotfiles_rc__rc_source_path" ] && \
+        [ "${__dotfiles_rc__rc_source_path%.sh}" != "$__dotfiles_rc__rc_source_path" ] && \
+          . "$__dotfiles_rc__rc_source_path"
+    done
   done
 
   unset -v '__dotfiles_rc__rc_source_path' '__dotfiles_rc__rc_provider_path'
