@@ -1,6 +1,6 @@
 # TODO: Add docs, notes, etc.
 
-export LANG=en
+export LANG='en_US.UTF-8'
 export PS1='$USER $(basename $PWD) \$ '
 
 # Default text editors
