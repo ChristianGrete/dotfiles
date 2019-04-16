@@ -34,7 +34,7 @@ fi
 # Finally, overwrite the PATH variable locally (will be exported later)
 PATH="$__dotfiles_rc__optimized_PATH"
 
-unset __dotfiles_rc__optimized_PATH
+unset -v '__dotfiles_rc__optimized_PATH'
 
 #
 # 3. Adding user-specific directories to the PATH variable
@@ -53,25 +53,42 @@ unset __dotfiles_rc__optimized_PATH
 export PATH
 
 #
-# 5. Importing the dotfiles base package runcom
-#
-
-# Load the generated ~/.rc.d/localhost/dotfiles.sh file provided by the doftiles base package [6]
-[ -r "$HOME/.rc.d/localhost/dotfiles.sh" ] && . "$HOME/.rc.d/localhost/dotfiles.sh"
-
-#
-# 6. Importing any other modified environment variables
+# 5. Importing any other modified environment variables
 #
 
 # Load the ~/.env file provided by the dotfiles base package
 [ -r "$HOME/.env" ] && . "$HOME/.env"
 
 #
-# 7. Importing aliases
+# 6. Importing aliases
 #
 
 # Load the ~/.aliases file provided by the dotfiles base package
 [ -r "$HOME/.aliases" ] && . "$HOME/.aliases"
+
+#
+# 7. Importing all runcoms that have been added to ~/.rc.d/<provider>/ [6]
+#
+
+__dotfiles_rc__rc_dir="$HOME/.rc.d"
+
+if [ -d "$__dotfiles_rc__rc_dir" -a -r "$__dotfiles_rc__rc_dir" ]; then
+  for __dotfiles_rc__rc_provider_path in $(ls -1 "$__dotfiles_rc__rc_dir"); do
+    __dotfiles_rc__rc_provider_path="$__dotfiles_rc__rc_dir/$__dotfiles_rc__rc_provider_path"
+
+    if [ -d "$__dotfiles_rc__rc_provider_path" -a -r "$__dotfiles_rc__rc_provider_path" ]; then
+      for __dotfiles_rc__rc_source_path in $(ls -1 "$__dotfiles_rc__rc_provider_path"); do
+        __dotfiles_rc__rc_source_path="$__dotfiles_rc__rc_provider_path/$__dotfiles_rc__rc_source_path"
+
+        [ -r "$__dotfiles_rc__rc_source_path" ] && . "$__dotfiles_rc__rc_source_path"
+      done
+    fi
+  done
+
+  unset -v '__dotfiles_rc__rc_source_path' '__dotfiles_rc__rc_provider_path'
+fi
+
+unset -v '__dotfiles_rc__rc_dir'
 
 #
 # NOTES:
@@ -85,6 +102,5 @@ export PATH
 #       https://www.freedesktop.org/software/systemd/man/file-hierarchy.html#Compatibility%20Symlinks).
 #  [5]  The systemd file hierarchy also defines a fixed directory structure for high-level user resources (see
 #       https://www.freedesktop.org/software/systemd/man/file-hierarchy.html#Home%20Directory).
-#  [6]  The ~/.rc.d/localhost/dotfiles.sh runcom provides major dotfiles environment variables that are used by dotfiles
-#       itself and dotfiles packages that have been installed in addition.
+#  [6]  Additional runcoms can be put into subdirectories of ~/.rc.d whose names must be the respective provider's FQDN.
 #
