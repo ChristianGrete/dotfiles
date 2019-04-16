@@ -1,0 +1,19 @@
+exclude = "{$exclude,}"
+excludeInProject = "{$excludeInProject,dist}"
+excludeInFileChooser = "{$excludeInFileChooser,$excludeInProject}"
+excludeInFolderSearch = "{$excludeInFolderSearch,$excludeInProject}"
+include = "{$include,}"
+projectDirectory = "$CWD"
+projectName = "@christiangrete/dotfiles"
+windowTitleProject = "${TM_FILEPATH:? — ${TM_FILEPATH/${projectDirectory}\///}:${TM_DISPLAYNAME:+ — $TM_DISPLAYNAME}}"
+windowTitleSCM = "${TM_SCM_BRANCH:+ ($TM_SCM_BRANCH)}"
+windowTitle = "$projectName$windowTitleProject$windowTitleSCM"
+
+[ "*.{,ba}sh" ]
+fileType = source.shell
+
+[ "{.{git{ignore,message}},CODEOWNERS,LICENSE}" ]
+fileType = text.plain
+
+[ "{{COMMIT_EDIT,MERGE_}MSG}" ]
+fileType = text.git-commit
