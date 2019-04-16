@@ -80,7 +80,9 @@ if [ -d "$__dotfiles_rc__rc_dir" -a -r "$__dotfiles_rc__rc_dir" ]; then
       for __dotfiles_rc__rc_source_path in $(ls -1 "$__dotfiles_rc__rc_provider_path"); do
         __dotfiles_rc__rc_source_path="$__dotfiles_rc__rc_provider_path/$__dotfiles_rc__rc_source_path"
 
-        [ -r "$__dotfiles_rc__rc_source_path" ] && . "$__dotfiles_rc__rc_source_path"
+        if [ -f "$__dotfiles_rc__rc_source_path" -a -r "$__dotfiles_rc__rc_source_path" ]; then
+          . "$__dotfiles_rc__rc_source_path"
+        fi
       done
     fi
   done
