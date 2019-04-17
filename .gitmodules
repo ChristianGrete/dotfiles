@@ -1,0 +1,3 @@
+[submodule "vendor/git/github.com/ChristianGrete/dotfiles-cli"]
+	path = vendor/git/github.com/ChristianGrete/dotfiles-cli
+	url = git@github.com:ChristianGrete/dotfiles-cli.git
