@@ -1,0 +1,17 @@
+#!/bin/sh -eu
+
+__dotfiles_cli__0="$0"
+
+while [ -L "$__dotfiles_cli__0" ]; do
+  __dotfiles_cli__0="$(readlink "$__dotfiles_cli__0")"
+done
+
+cd "$(dirname "$__dotfiles_cli__0")/.."
+
+unset -v '__dotfiles_cli__0'
+
+[ "$PWD" != "$(pwd -P)" ] && export PWD="$(pwd)"
+
+[ -f "$PWD/etc/env.sh" -a -r "$PWD/etc/env.sh" ] && . "$PWD/etc/env.sh"
+
+[ -x "$PWD/libexec/dotfiles-cli" ] && command "$PWD/libexec/dotfiles-cli" "$@"
