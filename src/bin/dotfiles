@@ -10,7 +10,7 @@ cd "$(dirname "$__dotfiles_cli__0")/.."
 
 unset -v '__dotfiles_cli__0'
 
-[ "$PWD" != "$(pwd -P)" ] && export PWD="$(pwd)"
+[ "$PWD" != "$(pwd -P)" ] && export PWD="$(pwd -P)"
 
 [ -f "$PWD/etc/env.sh" -a -r "$PWD/etc/env.sh" ] && . "$PWD/etc/env.sh"
 
