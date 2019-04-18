@@ -1,18 +1,67 @@
+encoding = "UTF-8"
 exclude = "{$exclude,}"
-excludeInProject = "{$excludeInProject,dist}"
+excludeInProject = "{$exclude,$excludeInProject,.{DS_Store,git},build,dist,vendor}"
 excludeInFileChooser = "{$excludeInFileChooser,$excludeInProject}"
 excludeInFolderSearch = "{$excludeInFolderSearch,$excludeInProject}"
-include = "{$include,.{dockerignore,gitmodules}}"
+include = "{$include,*,.{dockerignore,editorconfig,git{,ignore,message,modules},tm_properties}}"
 projectDirectory = "$CWD"
-projectName = "@christiangrete/dotfiles"
+projectName = "github.com/ChristianGrete/dotfiles"
+softTabs = true
+tabSize = 2
 windowTitleProject = "${TM_FILEPATH:? — ${TM_FILEPATH/${projectDirectory}\///}:${TM_DISPLAYNAME:+ — $TM_DISPLAYNAME}}"
 windowTitleSCM = "${TM_SCM_BRANCH:+ ($TM_SCM_BRANCH)}"
 windowTitle = "$projectName$windowTitleProject$windowTitleSCM"
+wrapColumn = 120
 
-[ "*.{,ba}sh" ]
+[ attr.untitled ]
+fileType = text.plain
+
+[ source.git-config ]
+softTabs = false
+tabSize = 4
+
+[ text ]
+softTabs = false
+spellChecking = true
+spellingLanguage = "en"
+tabSize = 4
+
+[ text.git-commit ]
+disableExtendedAttributes = true
+spellChecking = true
+spellingLanguage = "en"
+
+[ text.html ]
+softTabs = true
+spellChecking = true
+spellingLanguage = "en"
+tabSize = 2
+
+[ text.html.markdown ]
+softTabs = false
+spellChecking = true
+spellingLanguage = "en"
+tabSize = 4
+
+[ "*.md" ]
+fileType = text.html.markdown
+
+[ "*.sh" ]
 fileType = source.shell
 
-[ "{.{git{ignore,message}},CODEOWNERS,LICENSE}" ]
+[ ".gitmodules" ]
+fileType = source.git-config
+
+[ ".tm_properties" ]
+fileType = source.tm-properties
+
+[ "Dockerfile" ]
+fileType = source.dockerfile
+
+[ "{*.ini,.editorconfig}" ]
+fileType = text.active4d-ini
+
+[ "{.{dockerignore,git{ignore,message}},CODEOWNERS,LICENSE}" ]
 fileType = text.plain
 
 [ "{{COMMIT_EDIT,MERGE_}MSG}" ]
