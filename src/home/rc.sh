@@ -15,7 +15,7 @@
 #
 
 # Temporary reset the PATH variable to its default value [3]
-PATH="$(command -p getconf PATH)"
+PATH="$(command -p 'getconf' 'PATH')"
 
 # Start designing a new PATH variable from scratch
 __dotfiles_rc__optimized_PATH=''
