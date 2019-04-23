@@ -56,8 +56,8 @@ export PATH
 # 5. Importing any other modified environment variables
 #
 
-# Load the ~/.env file provided by the dotfiles base package
-[ -r "$HOME/.env" ] && . "$HOME/.env"
+# Load the ~/.environment file provided by the dotfiles base package
+[ -r "$HOME/.environment" ] && . "$HOME/.environment"
 
 #
 # 6. Importing aliases
