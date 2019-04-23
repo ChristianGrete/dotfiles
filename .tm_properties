@@ -3,7 +3,7 @@ exclude = "{$exclude,}"
 excludeInProject = "{$exclude,$excludeInProject,.{DS_Store,git},build,dist,vendor}"
 excludeInFileChooser = "{$excludeInFileChooser,$excludeInProject}"
 excludeInFolderSearch = "{$excludeInFolderSearch,$excludeInProject}"
-include = "{$include,*,.{dockerignore,editorconfig,git{,ignore,message,modules},tm_properties}}"
+include = "{$include,*,.{dockerignore,editorconfig,git{,ignore,message,modules},tm_properties,travis.yml}}"
 projectDirectory = "$CWD"
 projectName = "github.com/ChristianGrete/dotfiles"
 softTabs = true
@@ -48,6 +48,9 @@ fileType = text.html.markdown
 
 [ "*.sh" ]
 fileType = source.shell
+
+[ "*.yml" ]
+fileType = source.yaml
 
 [ ".gitmodules" ]
 fileType = source.git-config
