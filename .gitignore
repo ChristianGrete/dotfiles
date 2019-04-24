@@ -3,18 +3,6 @@
 build/
 dist/opt/*
 dist/srv/*
-src/etc/*
-src/home/bin/*
-src/home/rc.d/*
-src/home/srv/*
-src/opt/*
-src/src/*
 
 !dist/opt/README.md
 !dist/srv/README.md
-!src/etc/README.md
-!src/home/bin/README.md
-!src/home/rc.d/README.md
-!src/home/srv/README.md
-!src/opt/README.md
-!src/src/README.md
