@@ -1,0 +1,11 @@
+#!/bin/sh -eu
+
+echo "$(cat <<EOF
+#
+# Auto generated file
+#
+
+export DOTFILES_DIR='$DOTFILES_DIR'
+export DOTFILES_REPO__DIR='$(dirname "$DOTFILES_DIR")'
+EOF
+)" > "$DOTFILES_DIR/etc/environment.sh"
