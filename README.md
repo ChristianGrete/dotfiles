@@ -1,7 +1,7 @@
 # [dotfiles][repository-github-url]
 
-[![License: MIT][repository-license-shield]][repository-license-url]
 [![Compliance: POSIX][repository-compliance-shield]][repository-compliance-url]
+[![License: MIT][repository-license-shield]][repository-license-url]
 
 > The base package of my personal dotfiles
 
