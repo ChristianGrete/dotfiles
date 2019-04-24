@@ -1,0 +1,21 @@
+#!/bin/sh -eu
+
+cd "$(dirname "$0")"
+
+__dotfiles_repo__clean_filename="./$(basename "$0")"
+
+while [ -L "$__dotfiles_repo__clean_filename" ]; do
+  __dotfiles_repo__clean_filename="$(readlink "$__dotfiles_repo__clean_filename")"
+
+  cd "$(dirname "$__dotfiles_repo__clean_filename")"
+
+  __dotfiles_repo__clean_filename="./$(basename "$__dotfiles_repo__clean_filename")"
+done
+
+unset -v '__dotfiles_repo__clean_filename'
+
+cd '..'
+
+[ "$PWD" != "$(pwd -P)" ] && cd "$(pwd -P)"
+
+[ -e "$PWD/build" ] && rm -fr "$PWD/build"
