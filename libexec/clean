@@ -1,4 +1,4 @@
-#!/bin/sh -eu
+#!/bin/sh -u
 
 cd "$(dirname "$0")"
 
@@ -18,6 +18,18 @@ cd '..'
 
 [ "$PWD" != "$(pwd -P)" ] && cd "$(pwd -P)"
 
-[ -e "$PWD/build" ] && rm -fr "$PWD/build"
+printf 'Removing build directory ... '
 
-exit 0
+rm -fr "$PWD/build" > '/dev/null' 2>&1
+
+__dotfiles_repo__clean_rm_exit_status=$?
+
+if [ $__dotfiles_repo__clean_rm_exit_status -eq 0 ]; then
+  echo 'succeeded.'
+
+  unset -v '__dotfiles_repo__clean_rm_exit_status'
+else
+  echo 'failed.'
+
+  exit $__dotfiles_repo__clean_rm_exit_status
+fi
