@@ -1,8 +1,9 @@
 *~
 .DS_Store
 build/
+dist/**/*.md
 dist/opt/*
 dist/srv/*
 
-!dist/opt/README.md
+!dist/opt/dotfiles.christiangrete.com/cli/*
 !dist/srv/README.md
