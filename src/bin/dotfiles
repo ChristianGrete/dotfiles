@@ -1,4 +1,4 @@
-#!/bin/sh -eu
+#!/bin/sh -u
 
 cd "$(dirname "$0")"
 
@@ -34,4 +34,4 @@ if [ -r "$DOTFILES_DIR/etc/environment.sh" -a -f "$DOTFILES_DIR/etc/environment.
   . "$DOTFILES_DIR/etc/environment.sh"
 fi
 
-[ -x "$DOTFILES_DIR/libexec/dotfiles-cli" ] && "$DOTFILES_DIR/libexec/dotfiles-cli" "$@"
+[ -x "$DOTFILES_CLI__FILE" ] && "$DOTFILES_CLI__FILE" "$@"

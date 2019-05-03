@@ -1,10 +1,13 @@
 #!/bin/sh -eu
 
+[ ! -e "$DOTFILES_DIR/etc" ] && mkdir "$DOTFILES_DIR/etc"
+
 echo "$(cat <<EOF
 #
 # Auto generated file
 #
 
+export DOTFILES_CLI__FILE='$DOTFILES_DIR/opt/dotfiles.christiangrete.com/cli/bin/dotfiles'
 export DOTFILES_DIR='$DOTFILES_DIR'
 export DOTFILES_REPO__DIR='$(dirname "$DOTFILES_DIR")'
 EOF
