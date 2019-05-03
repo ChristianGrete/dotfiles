@@ -2,8 +2,11 @@
 .DS_Store
 build/
 dist/**/*.md
+dist/etc/environment.sh
+dist/home/bin/*
+dist/home/rc.d/*
+dist/home/srv/*
 dist/opt/*
 dist/srv/*
 
 !dist/opt/dotfiles.christiangrete.com/cli/*
-!dist/srv/README.md
