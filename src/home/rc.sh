@@ -41,7 +41,7 @@ unset -v '__dotfiles_rc__optimized_PATH'
 #
 
 # Include the ~/.bin directory provided by the dotfiles base package
-[ -d "$HOME/.bin" -a -r "$HOME/.bin" ] && PATH="$HOME/.bin:$PATH"
+PATH="$HOME/.bin:$PATH"
 
 # Include the fixed ~/.local directory when present (quaternary hierarchy) [5]
 [ -d "$HOME/.local/bin" -a -r "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
@@ -53,21 +53,39 @@ unset -v '__dotfiles_rc__optimized_PATH'
 export PATH
 
 #
-# 5. Importing any other modified environment variables
+# 5. Importing configuration files provided by the dotfiles base package
 #
 
-# Load the ~/.environment file provided by the dotfiles base package
-[ -r "$HOME/.environment" ] && . "$HOME/.environment"
+__dotfiles_rc__dotfiles_etc_dir="$(dotfiles dir)/etc"
+
+# Load modified environment variables
+. "$__dotfiles_rc__dotfiles_etc_dir/environment.sh"
+
+# Load common aliases
+. "$__dotfiles_rc__dotfiles_etc_dir/aliases.sh"
+
+unset -v '__dotfiles_rc__dotfiles_etc_dir'
 
 #
-# 6. Importing aliases
+# 6. Importing any other modified environment variables
 #
 
-# Load the ~/.aliases file provided by the dotfiles base package
-[ -r "$HOME/.aliases" ] && . "$HOME/.aliases"
+[ -f "$HOME/.environment" -a -r "$HOME/.environment" ] && . "$HOME/.environment"
 
 #
-# 7. Importing all runcoms that have been added to ~/.rc.d/<provider>/ [6]
+# 7. Importing prompt customizations
+#
+
+[ -f "$HOME/.prompt" -a -r "$HOME/.prompt" ] && . "$HOME/.prompt"
+
+#
+# 8. Importing custom aliases
+#
+
+[ -f "$HOME/.aliases" -a -r "$HOME/.aliases" ] && . "$HOME/.aliases"
+
+#
+# 9. Importing all runcoms that have been added to ~/.rc.d/<provider>/ [6]
 #
 
 __dotfiles_rc__rc_dir="$HOME/.rc.d"

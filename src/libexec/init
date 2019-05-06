@@ -1,6 +1,6 @@
 #!/bin/sh -eu
 
-[ ! -e "$DOTFILES_DIR/etc" ] && mkdir "$DOTFILES_DIR/etc"
+[ ! -e "$DOTFILES_DIR/var/dotfiles" ] && mkdir -p "$DOTFILES_DIR/var/dotfiles"
 
 echo "$(cat <<EOF
 #
@@ -11,4 +11,4 @@ export DOTFILES_CLI__FILE='$DOTFILES_DIR/opt/dotfiles.christiangrete.com/cli/bin
 export DOTFILES_DIR='$DOTFILES_DIR'
 export DOTFILES_REPO__DIR='$(dirname "$DOTFILES_DIR")'
 EOF
-)" > "$DOTFILES_DIR/etc/environment.sh"
+)" > "$DOTFILES_DIR/var/dotfiles/properties.sh"
