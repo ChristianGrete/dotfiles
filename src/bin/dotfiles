@@ -2,17 +2,17 @@
 
 cd "$(dirname "$0")"
 
-__dotfiles_cli__filename="./$(basename "$0")"
+__dotfiles_cli__file="./$(basename "$0")"
 
-while [ -L "$__dotfiles_cli__filename" ]; do
-  __dotfiles_cli__filename="$(readlink "$__dotfiles_cli__filename")"
+while [ -L "$__dotfiles_cli__file" ]; do
+  __dotfiles_cli__file="$(readlink "$__dotfiles_cli__file")"
 
-  cd "$(dirname "$__dotfiles_cli__filename")"
+  cd "$(dirname "$__dotfiles_cli__file")"
 
-  __dotfiles_cli__filename="./$(basename "$__dotfiles_cli__filename")"
+  __dotfiles_cli__file="./$(basename "$__dotfiles_cli__file")"
 done
 
-unset -v '__dotfiles_cli__filename'
+unset -v '__dotfiles_cli__file'
 
 cd '..'
 
@@ -20,8 +20,10 @@ cd '..'
 
 [ "$*" = 'dir' ] && echo "$PWD" && exit
 
-if [ ! -e "$PWD/var/etc/environment.sh" ]; then
-  "$PWD/libexec/init"
+__dotfiles_cli__environment_file="$PWD/var/etc/environment.sh"
+
+if [ ! -e "$__dotfiles_cli__environment_file" ]; then
+  command "$PWD/libexec/init"
 
   __dotfiles_cli__init_exit_status=$?
 
@@ -30,8 +32,8 @@ if [ ! -e "$PWD/var/etc/environment.sh" ]; then
   unset -v '__dotfiles_cli__init_exit_status'
 fi
 
-if [ -r "$PWD/var/etc/environment.sh" -a -f "$PWD/var/etc/environment.sh" ]; then
-  . "$PWD/var/etc/environment.sh"
-fi
+. "$__dotfiles_cli__environment_file"
 
-[ -x "$DOTFILES_CLI__FILE" ] && "$DOTFILES_CLI__FILE" "$@"
+unset -v '__dotfiles_cli__environment_file'
+
+[ -x "$DOTFILES_CLI__FILE" ] && command "$DOTFILES_CLI__FILE" "$@"
