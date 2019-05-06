@@ -20,10 +20,8 @@ cd '..'
 
 [ "$*" = 'dir' ] && echo "$PWD" && exit
 
-export DOTFILES_DIR="$PWD"
-
-if [ ! -e "$DOTFILES_DIR/var/dotfiles/properties.sh" ]; then
-  "$DOTFILES_DIR/libexec/init"
+if [ ! -e "$PWD/var/etc/environment.sh" ]; then
+  "$PWD/libexec/init"
 
   __dotfiles_cli__init_exit_status=$?
 
@@ -32,8 +30,8 @@ if [ ! -e "$DOTFILES_DIR/var/dotfiles/properties.sh" ]; then
   unset -v '__dotfiles_cli__init_exit_status'
 fi
 
-if [ -r "$DOTFILES_DIR/var/dotfiles/properties.sh" -a -f "$DOTFILES_DIR/var/dotfiles/properties.sh" ]; then
-  . "$DOTFILES_DIR/var/dotfiles/properties.sh"
+if [ -r "$PWD/var/etc/environment.sh" -a -f "$PWD/var/etc/environment.sh" ]; then
+  . "$PWD/var/etc/environment.sh"
 fi
 
 [ -x "$DOTFILES_CLI__FILE" ] && "$DOTFILES_CLI__FILE" "$@"
