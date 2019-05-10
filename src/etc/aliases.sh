@@ -24,7 +24,7 @@ fi
 # Shortcut to print a long list of directory contents
 #
 
-alias ll='ls -la'
+alias ll='ls -Fal'
 
 #
 # Faster logout, when available
