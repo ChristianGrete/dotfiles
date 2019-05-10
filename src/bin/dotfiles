@@ -17,11 +17,11 @@ cd "$(dirname "$0")"
 __dotfiles_cli__file="./$(basename "$0")"
 
 # Provide a POSIX compliant fallback if readlink is unavailable [1]
-if ! command -pv 'readlink' > '/dev/null' 2>&1; then
+if ! command -v 'readlink' > '/dev/null' 2>&1; then
   readlink () {
     set -- "$(ls -dl "$*")" "$*"
 
-    echo "${1#*"$2 -> "}"
+    printf "${1#*"$2 -> "}"
   }
 fi
 
