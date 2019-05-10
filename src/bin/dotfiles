@@ -3,8 +3,6 @@
 # The dotfiles CLI endpoint:
 # A POSIX compliant, executable shell wrapper for the dotfiles-cli app.
 #
-# Scope: CLI
-#
 
 #
 # Changing the current working directory to the physical pathname of the dotfiles base package's artifact
