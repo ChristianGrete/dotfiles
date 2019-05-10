@@ -41,7 +41,7 @@ unset -v '__dotfiles_cli__file'
 cd -P '..'
 
 #
-# Providing the `dir` method independently and as early as possible
+# Providing the basic `dir` method independently and as early as possible
 #
 
 [ "$*" = 'dir' ] && echo "$PWD" && exit
