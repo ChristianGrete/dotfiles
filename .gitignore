@@ -7,5 +7,15 @@ dist/home/rc.d/*
 dist/home/srv/*
 dist/opt/*
 dist/var/*
+src/home/bin/*
+src/home/rc.d/*
+src/home/srv/*
+src/opt/*
+src/var/*
 
 !dist/opt/dotfiles.christiangrete.com/cli/*
+!src/home/bin/README.md
+!src/home/rc.d/README.md
+!src/home/srv/README.md
+!src/opt/README.md
+!src/var/README.md
