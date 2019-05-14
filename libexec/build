@@ -1,32 +1,14 @@
 #!/bin/sh -u
 
-cd "$(dirname "$0")"
-
-__dotfiles_repo__build_filename="./$(basename "$0")"
-
-while [ -L "$__dotfiles_repo__build_filename" ]; do
-  __dotfiles_repo__build_filename="$(readlink "$__dotfiles_repo__build_filename")"
-
-  cd "$(dirname "$__dotfiles_repo__build_filename")"
-
-  __dotfiles_repo__build_filename="./$(basename "$__dotfiles_repo__build_filename")"
-done
-
-unset -v '__dotfiles_repo__build_filename'
-
-cd '..'
-
-[ "$PWD" != "$(pwd -P)" ] && cd "$(pwd -P)"
-
 printf 'Cleaning up ... '
 
-"$PWD/libexec/clean" > '/dev/null' 2>&1
+command './clean' > '/dev/null' 2>&1
 
 echo 'done.'
 
 printf 'Copying source files ... '
 
-cp -R "$PWD/src" "$PWD/build" > '/dev/null' 2>&1
+cp -R '../src' '../build' > '/dev/null' 2>&1
 
 __dotfiles_repo__build_cp_exit_status=$?
 
@@ -40,10 +22,10 @@ else
   exit $__dotfiles_repo__build_cp_exit_status
 fi
 
-if [ -e "$PWD/vendor/git/github.com/ChristianGrete/dotfiles-cli/dist" ]; then
+if [ -e '../vendor/git/github.com/ChristianGrete/dotfiles-cli/dist' ]; then
   printf 'Making target directory for CLI ... '
 
-  mkdir "$PWD/build/opt/dotfiles.christiangrete.com" > '/dev/null' 2>&1
+  mkdir '../build/opt/dotfiles.christiangrete.com' > '/dev/null' 2>&1
 
   __dotfiles_repo__build_mkdir_exit_status=$?
 
@@ -59,8 +41,8 @@ if [ -e "$PWD/vendor/git/github.com/ChristianGrete/dotfiles-cli/dist" ]; then
 
   printf 'Copying CLI artifact to target directory ... '
 
-  cp -R "$PWD/vendor/git/github.com/ChristianGrete/dotfiles-cli/dist" \
-    "$PWD/build/opt/dotfiles.christiangrete.com/cli" > '/dev/null' 2>&1
+  cp -R '../vendor/git/github.com/ChristianGrete/dotfiles-cli/dist' \
+    '../build/opt/dotfiles.christiangrete.com/cli' > '/dev/null' 2>&1
 
   __dotfiles_repo__build_cp_exit_status=$?
 
