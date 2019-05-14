@@ -1,6 +1,10 @@
 #!/bin/sh -eu
 
-[ ! -e "$PWD/var/etc" ] && mkdir -p "$PWD/var/etc"
+__dotfiles_dir="$*"
+
+[ ! -d "$__dotfiles_dir" -o ! -r "$__dotfiles_dir" -o ! -w "$__dotfiles_dir" ] && exit 1
+
+[ ! -d "$__dotfiles_dir/var/etc" ] && mkdir -p "$__dotfiles_dir/var/etc"
 
 echo "$(cat <<EOF
 #
