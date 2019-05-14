@@ -1,4 +1,4 @@
-# [![dotfiles](https://cdn.rawgit.com/ChristianGrete/dotfiles/develop/misc/logo6.svg "dotfiles")][repository-github-url]
+# [![dotfiles](https://cdn.rawgit.com/ChristianGrete/dotfiles/develop/misc/logo7.svg "dotfiles")][repository-github-url]
 
 [![Compliance: POSIX][repository-compliance-shield]][repository-compliance-url]
 [![License: MIT][repository-license-shield]][repository-license-url]

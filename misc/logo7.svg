@@ -55,9 +55,9 @@
 	<rect id="background" clip-path="url(#mask_1_)" fill="#0A2933" width="208" height="34"/>
 	<linearGradient id="gradient_1_" gradientUnits="userSpaceOnUse" x1="104" y1="34" x2="104" y2="-9.094947e-13">
 		<stop  offset="0" style="stop-color:#708284;stop-opacity:0"/>
-		<stop  offset="0.0293" style="stop-color:#708284;stop-opacity:0.0732"/>
-		<stop  offset="0.2" style="stop-color:#708284;stop-opacity:0.5"/>
-		<stop  offset="0.2538" style="stop-color:#708284;stop-opacity:0.4552"/>
+		<stop  offset="0.022" style="stop-color:#708284;stop-opacity:0.0732"/>
+		<stop  offset="0.15" style="stop-color:#708284;stop-opacity:0.5"/>
+		<stop  offset="0.2083" style="stop-color:#708284;stop-opacity:0.4552"/>
 		<stop  offset="0.8" style="stop-color:#708284;stop-opacity:0"/>
 	</linearGradient>
 	<rect id="gradient" clip-path="url(#mask_1_)" fill="url(#gradient_1_)" width="208" height="34"/>
