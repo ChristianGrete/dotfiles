@@ -1,0 +1,58 @@
+#!/bin/sh -u
+#
+# The dotfiles repository CLI endpoint
+#
+
+#
+# 1. Set `$PWD` to the physical path of this repository
+#
+
+# Change to the directory of the executed command's file
+cd "$(dirname "$0")"
+
+# Determine the basename of that file
+__dotfiles_repo__cli_base="$(basename "$0")"
+
+# Provide a POSIX compliant fallback when `readlink` is unavailable [1]
+if ! command -v 'readlink' > '/dev/null' 2>&1; then
+  readlink () {
+    set -- "$(ls -dl "$*")" "$*"
+
+    printf "${1#*"$2 -> "}"
+  }
+fi
+
+# Resolve a possible chain of symlinks to this physical file [2]
+while [ -L "$__dotfiles_repo__cli_base" ]; do
+  __dotfiles_repo__cli_base="$(readlink "$__dotfiles_repo__cli_base")"
+
+  cd "$(dirname "$__dotfiles_repo__cli_base")"
+
+  __dotfiles_repo__cli_base="$(basename "$__dotfiles_repo__cli_base")"
+done
+
+# Dismiss the unnecessary resulting basename
+unset -v '__dotfiles_repo__cli_base'
+
+# Change to the underlying canonicalized pathname of the resulting directory
+cd -P '..'
+
+#
+# 2. Run the script named in `$1` and pass the remaining params
+#
+
+# Change to the "libexec" directory
+cd './libexec'
+
+# Execute the current script when possible
+[ -x "$PWD/$1" ] && command "$PWD/$1" $(shift; echo "$@")
+
+#
+# NOTES:
+#
+# [1] As the `readlink` utility is not standardized by POSIX, the output of `ls -dl` can be utilized instead (see
+#     https://groups.google.com/d/msg/comp.unix.shell/3s8cuwcVnTk/Burr9ThIs9oJ).
+# [2] Since `readlink -f` is unsupported both on macOS and in the locally provided fallback function, the resolution of
+#     (possibly chained) symbolic links has to be done manually (see https://stackoverflow.com/a/1116890 and
+#     https://gist.github.com/geoff-codes/1f23957288d371b75a2e#gistcomment-2746338).
+#
