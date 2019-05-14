@@ -4,14 +4,14 @@
 #
 
 #
-# 1. Quitting on non-interactive shells
+#  1. Quitting on non-interactive shells
 #
 
 # Check whether the -i option is specified or stdin is associated with a terminal [1][2]
 [ "${-#*i}" != "$-" ] || [ -t 0 -o -p '/dev/stdin' ] || return
 
 #
-# 2. Optimizing the PATH variable
+#  2. Optimizing the PATH variable
 #
 
 # Temporary reset the PATH variable to its default value [3]
@@ -37,7 +37,7 @@ PATH="$__dotfiles_rc__optimized_PATH"
 unset -v '__dotfiles_rc__optimized_PATH'
 
 #
-# 3. Adding user-specific directories to the PATH variable
+#  3. Adding user-specific directories to the PATH variable
 #
 
 # Include the ~/.bin directory provided by the dotfiles base package
@@ -47,13 +47,13 @@ PATH="$HOME/.bin:$PATH"
 [ -d "$HOME/.local/bin" -a -r "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 
 #
-# 4. Exporting the modified PATH variable
+#  4. Exporting the modified PATH variable
 #
 
 export PATH
 
 #
-# 5. Importing configuration files provided by the dotfiles base package
+#  5. Importing configuration files provided by the dotfiles base package
 #
 
 __dotfiles_rc__dotfiles_etc_dir="$(dotfiles dir)/etc"
@@ -67,25 +67,31 @@ __dotfiles_rc__dotfiles_etc_dir="$(dotfiles dir)/etc"
 unset -v '__dotfiles_rc__dotfiles_etc_dir'
 
 #
-# 6. Importing any other modified environment variables
+#  6. Importing any other modified environment variables
 #
 
 [ -f "$HOME/.environment" -a -r "$HOME/.environment" ] && . "$HOME/.environment"
 
 #
-# 7. Importing prompt customizations
+#  7. Importing prompt customizations
 #
 
 [ -f "$HOME/.prompt" -a -r "$HOME/.prompt" ] && . "$HOME/.prompt"
 
 #
-# 8. Importing custom aliases
+#  8. Importing custom functions
+#
+
+[ -f "$HOME/.functions" -a -r "$HOME/.functions" ] && . "$HOME/.functions"
+
+#
+#  9. Importing custom aliases
 #
 
 [ -f "$HOME/.aliases" -a -r "$HOME/.aliases" ] && . "$HOME/.aliases"
 
 #
-# 9. Importing all runcoms that have been added to ~/.rc.d/<provider>/ [6]
+# 10. Importing all runcoms that have been added to ~/.rc.d/<provider>/ [6]
 #
 
 __dotfiles_rc__rc_dir="$HOME/.rc.d"
