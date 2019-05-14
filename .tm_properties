@@ -46,7 +46,7 @@ tabSize = 4
 [ "*.md" ]
 fileType = text.html.markdown
 
-[ "*.sh" ]
+[ "{*.sh,{bin,libexec}/*}" ]
 fileType = source.shell
 
 [ "*.yml" ]
