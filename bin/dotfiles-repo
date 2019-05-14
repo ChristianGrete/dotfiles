@@ -38,7 +38,13 @@ unset -v '__dotfiles_repo__cli_base'
 cd -P '..'
 
 #
-# 2. Run the script named in `$1` and pass the remaining params
+# 2. Provide a basic `dir` method independently and as early as possible
+#
+
+[ "$*" = 'dir' ] && echo "$PWD" && exit
+
+#
+# 3. Run the script named in `$1` and pass the remaining parameters
 #
 
 # Change to the "libexec" directory
