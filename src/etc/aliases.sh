@@ -33,3 +33,9 @@ alias ll='ls -Fal'
 if command -v 'logout' > '/dev/null' 2>&1; then
   alias lo='logout'
 fi
+
+#
+# Shortcut to redo the previous command
+#
+
+alias r='fc -s'
