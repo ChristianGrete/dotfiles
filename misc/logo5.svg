@@ -52,18 +52,16 @@
 	<clipPath id="mask_1_">
 		<use xlink:href="#mask"  overflow="visible"/>
 	</clipPath>
-	<linearGradient id="background_1_" gradientUnits="userSpaceOnUse" x1="104" y1="34" x2="104" y2="-9.094947e-13">
-		<stop  offset="0.1" style="stop-color:#24292E"/>
-		<stop  offset="0.4852" style="stop-color:#22272C"/>
-		<stop  offset="0.6488" style="stop-color:#1D2125"/>
-		<stop  offset="0.7705" style="stop-color:#131618"/>
-		<stop  offset="0.8707" style="stop-color:#050607"/>
-		<stop  offset="0.9" style="stop-color:#000000"/>
+	<rect id="background" clip-path="url(#mask_1_)" fill="#0A2933" width="208" height="34"/>
+	<linearGradient id="gradient_1_" gradientUnits="userSpaceOnUse" x1="104" y1="34" x2="104" y2="-9.094947e-13">
+		<stop  offset="0.2" style="stop-color:#708284;stop-opacity:0.3"/>
+		<stop  offset="0.2825" style="stop-color:#708284;stop-opacity:0.2587"/>
+		<stop  offset="0.8" style="stop-color:#708284;stop-opacity:0"/>
 	</linearGradient>
-	<rect id="background" clip-path="url(#mask_1_)" fill="url(#background_1_)" width="208" height="34"/>
-	<linearGradient id="outline_1_" gradientUnits="userSpaceOnUse" x1="104" y1="36" x2="104" y2="-0.9819">
-		<stop  offset="0.15" style="stop-color:#000000"/>
-		<stop  offset="0.7" style="stop-color:#24292E"/>
+	<rect id="gradient" clip-path="url(#mask_1_)" fill="url(#gradient_1_)" width="208" height="34"/>
+	<linearGradient id="outline_1_" gradientUnits="userSpaceOnUse" x1="-2.0012" y1="17.509" x2="210.0012" y2="17.509">
+		<stop  offset="0" style="stop-color:#042029"/>
+		<stop  offset="0.6" style="stop-color:#042029;stop-opacity:0.3"/>
 	</linearGradient>
 	<path id="outline" clip-path="url(#mask_1_)" fill="url(#outline_1_)" d="M55.25,16.34c-0.63-0.28-1.27-0.42-1.92-0.42
 		c-2.38,0-3.87,1.82-3.87,4.76c0,2.92,1.48,4.73,3.87,4.73c0.73,0,1.39-0.19,1.96-0.55c0.22-0.22,0.31-0.4,0.31-0.63v-7.3
