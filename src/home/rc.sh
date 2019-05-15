@@ -10,6 +10,8 @@
 # Check whether the -i option is specified or stdin is associated with a terminal [1][2]
 [ "${-#*i}" != "$-" ] || [ -t 0 -o -p '/dev/stdin' ] || return
 
+set -o 'wurst' # > '/dev/null' 2>&1
+
 #
 #  2. Optimizing the PATH variable
 #
@@ -117,11 +119,6 @@ if [ -d "$__dotfiles_rc__rc_dir" -a -r "$__dotfiles_rc__rc_dir" ]; then
 fi
 
 unset -v '__dotfiles_rc__rc_dir'
-
-ps -f
-set -o
-set -o 'emacs' > '/dev/null' 2>&1 || set -o 'vi' > '/dev/null' 2>&1
-set -o
 
 #
 # NOTES:
