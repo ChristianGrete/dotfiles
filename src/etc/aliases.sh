@@ -13,11 +13,13 @@ alias ....='cd ../../..'
 alias .....='cd ../../../..'
 
 #
-# Faster clearing, when available
+# Faster screen clearing
 #
 
 if command -v 'clear' > '/dev/null' 2>&1; then
   alias c='clear'
+else
+  alias c="tput 'clear'"
 fi
 
 #
