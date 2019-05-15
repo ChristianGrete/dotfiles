@@ -35,7 +35,9 @@ if command -v 'logout' > '/dev/null' 2>&1; then
 fi
 
 #
-# Shortcut to redo the previous command
+# Shortcut to redo the previous command, when possible
 #
 
-alias r='fc -s -1'
+if command -v 'fc' > '/dev/null' 2>&1; then
+  alias r='fc -s'
+fi
