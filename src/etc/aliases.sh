@@ -38,4 +38,4 @@ fi
 # Shortcut to redo the previous command
 #
 
-alias r='fc -s'
+alias r='fc -s 1'
