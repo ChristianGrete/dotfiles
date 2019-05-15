@@ -8,9 +8,15 @@
 #
 
 # Check whether the -i option is specified or stdin is associated with a terminal [1][2]
-[ "${-#*i}" != "$-" ] || [ -t 0 -o -p '/dev/stdin' ] || return
+[ "${-#*'i'}" != "$-" ] || [ -t 0 -o -p '/dev/stdin' ] || return
 
-set -o 'wurst' # > '/dev/null' 2>&1
+__dotfiles_rc__options="$(set +o)"
+
+[ "${__dotfiles_rc__options#*'+o interactive'}" = "$__dotfiles_rc__options" ] || return
+
+[ "${__dotfiles_rc__options#*'+o emacs'}" != "$__dotfiles_rc__options" ] && set -o 'emacs'
+
+unset -v '__dotfiles_rc__options'
 
 #
 #  2. Optimizing the PATH variable
