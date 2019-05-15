@@ -6,11 +6,13 @@ dist/home/bin/*
 dist/home/rc.d/*
 dist/home/srv/*
 dist/opt/*
+dist/pkg/*
 dist/var/*
 src/home/bin/*
 src/home/rc.d/*
 src/home/srv/*
 src/opt/*
+src/pkg/*
 src/var/*
 
 !dist/opt/dotfiles.christiangrete.com/cli/*
@@ -18,4 +20,5 @@ src/var/*
 !src/home/rc.d/README.md
 !src/home/srv/README.md
 !src/opt/README.md
+!src/pkg/README.md
 !src/var/README.md
