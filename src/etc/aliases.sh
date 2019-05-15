@@ -27,11 +27,13 @@ fi
 alias ll='ls -Fal'
 
 #
-# Faster logout, when available
+# Faster logout
 #
 
 if command -v 'logout' > '/dev/null' 2>&1; then
-  alias lo='logout'
+  alias lo="logout 2> '/dev/null' || exit"
+else
+  alias lo='exit'
 fi
 
 #
