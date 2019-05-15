@@ -61,6 +61,9 @@ __dotfiles_rc__dotfiles_etc_dir="$(dotfiles dir)/etc"
 # Load modified environment variables
 . "$__dotfiles_rc__dotfiles_etc_dir/environment.sh"
 
+# Load common functions
+. "$__dotfiles_rc__dotfiles_etc_dir/functions.sh"
+
 # Load common aliases
 . "$__dotfiles_rc__dotfiles_etc_dir/aliases.sh"
 
