@@ -51,7 +51,7 @@ cd -P '..'
 __dotfiles_cli__environment_file="$PWD/var/etc/environment.sh"
 
 if [ ! -e "$__dotfiles_cli__environment_file" ]; then
-  command './libexec/init' "$PWD"
+  command './libexec/generate-env-file'
 
   __dotfiles_cli__init_exit_status=$?
 
@@ -72,7 +72,7 @@ unset -v '__dotfiles_cli__environment_file'
 # TODO: Invoking and passing
 #
 
-[ -x "$DOTFILES_CLI__FILE" ] && command "$DOTFILES_CLI__FILE" "$@"
+[ -x "$DOTFILES_CLI_FILE" ] && command "$DOTFILES_CLI_FILE" "$@"
 
 #
 # NOTES:

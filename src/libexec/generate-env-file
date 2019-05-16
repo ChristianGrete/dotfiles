@@ -1,0 +1,92 @@
+#!/bin/sh -eu
+#
+# Generate a static host-specific environment file
+#
+# @SYNOPSIS
+#   `generate-env-file`
+#
+# @DESCRIPTION
+#   The _generate-env-file_ script shall generate a static configuration file that exports variables specifying the
+#   constant environment settings for the current host system.
+#
+# @OPTIONS
+#   None.
+#
+# @OPERANDS
+#   None.
+#
+# @STDIN
+#   Not used.
+#
+# @INPUT_FILES
+#   None.
+#
+# @ENVIRONMENT_VARIABLES
+#   $PWD -
+#
+# @ASYNCHRONOUS_EVENTS
+#   Default.
+#
+# @STDOUT
+#   Not used.
+#
+# @STDERR
+#   The standard error shall be used only for diagnostic messages.
+#
+# @OUTPUT_FILES
+#   The output file shall be TODO
+#
+# @EXTENDED_DESCRIPTION
+#   None.
+#
+# @EXIT_STATUS
+#   `0`  - Successful completion.
+#   `>0` - An error occurred.
+#
+# @CONSEQUENCES_OF_ERRORS
+#   The environment file shall not be created.
+#
+
+readonly DOTFILES_DIR="$PWD"
+readonly DOTFILES_REPO_DIR="$(dirname "$DOTFILES_DIR")"
+
+#
+# TODO: Determine host OS
+#
+
+dotfiles_os="$(uname | tr '[:upper:]' '[:lower:]' | sed 's/mingw/windows/; s/.*windows.*/windows/')"
+
+#
+# TODO: Determine host arch
+#
+
+dotfiles_arch=''
+
+if [ "$dotfiles_os" = 'darwin' ]; then
+  # TODO:
+  # if sysctl machdep.cpu.extfeatures | grep EM64T >/dev/null; then echo amd64; else uname -m | sed 's/i386/386/'; fi
+  dotfiles_arch=''
+else
+  dotfiles_arch="$(uname -m | sed 's/^..86$$/386/; s/^.86$$/386/; s/x86_64/amd64/; s/arm.*/arm/')"
+fi
+
+#
+# TODO: Determine CLI file
+#
+
+dotfiles_cli_file="$DOTFILES_DIR/opt/dotfiles.christiangrete.com/cli/bin/dotfiles"
+
+[ ! -d './var/etc' ] && mkdir -p './var/etc'
+
+echo "$(cat <<EOF
+#
+# Auto generated file
+#
+
+export DOTFILES_ARCH='$dotfiles_arch'
+export DOTFILES_CLI_FILE='$dotfiles_cli_file'
+export DOTFILES_DIR='$DOTFILES_DIR'
+export DOTFILES_OS='$dotfiles_os'
+export DOTFILES_REPO_DIR='$DOTFILES_REPO_DIR'
+EOF
+)" > './var/etc/environment.sh'
