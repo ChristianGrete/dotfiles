@@ -23,7 +23,7 @@
 #   None.
 #
 # @ENVIRONMENT_VARIABLES
-#   $PWD -
+#   `$PWD` - TODO
 #
 # @ASYNCHRONOUS_EVENTS
 #   Default.
@@ -49,6 +49,11 @@
 #
 
 readonly DOTFILES_DIR="$PWD"
+readonly DOTFILES_OPT_DIR="$DOTFILES_DIR/opt"
+readonly DOTFILES_PROVIDER='dotfiles.christiangrete.com'
+readonly DOTFILES_CLI_DIR="$DOTFILES_OPT_DIR/$DOTFILES_PROVIDER/cli"
+readonly DOTFILES_CLI_BIN_DIR="$DOTFILES_CLI_DIR/bin"
+readonly DOTFILES_CLI_SCPT_FILE="$DOTFILES_CLI_BIN_DIR/dotfiles"
 readonly DOTFILES_REPO_DIR="$(dirname "$DOTFILES_DIR")"
 
 #
@@ -76,10 +81,14 @@ else
 fi
 
 #
-# TODO: Determine CLI file
+# TODO: Determine CLI bin file
 #
 
-dotfiles_cli_file="$DOTFILES_DIR/opt/dotfiles.christiangrete.com/cli/bin/dotfiles"
+dotfiles_cli_bin_file="$DOTFILES_CLI_SCPT_FILE"
+
+if [ -n "$dotfiles_os" -a -n "$dotfiles_arch" ]; then
+  dotfiles_cli_bin_file="$dotfiles_cli_bin_file-$dotfiles_os-$dotfiles_arch"
+fi
 
 [ ! -d './var/etc' ] && mkdir -p './var/etc'
 
@@ -89,9 +98,14 @@ echo "$(cat <<EOF
 #
 
 export DOTFILES_ARCH='$dotfiles_arch'
-export DOTFILES_CLI_FILE='$dotfiles_cli_file'
+export DOTFILES_CLI_BIN_DIR='$DOTFILES_CLI_BIN_DIR'
+export DOTFILES_CLI_BIN_FILE='$dotfiles_cli_bin_file'
+export DOTFILES_CLI_DIR='$DOTFILES_CLI_DIR'
+export DOTFILES_CLI_SCPT_FILE='$DOTFILES_CLI_SCPT_FILE'
 export DOTFILES_DIR='$DOTFILES_DIR'
+export DOTFILES_OPT_DIR='DOTFILES_OPT_DIR'
 export DOTFILES_OS='$dotfiles_os'
+export DOTFILES_PROVIDER='$DOTFILES_PROVIDER'
 export DOTFILES_REPO_DIR='$DOTFILES_REPO_DIR'
 EOF
 )" > './var/etc/environment.sh'

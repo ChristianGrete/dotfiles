@@ -72,7 +72,13 @@ unset -v '__dotfiles_cli__environment_file'
 # TODO: Invoking and passing
 #
 
-[ -x "$DOTFILES_CLI_FILE" ] && command "$DOTFILES_CLI_FILE" "$@"
+if [ -x "$DOTFILES_CLI_BIN_FILE" ]; then
+  command "$DOTFILES_CLI_BIN_FILE" "$@"
+elif [ -x "$DOTFILES_CLI_SCPT_FILE" ]; then
+  command "$DOTFILES_CLI_SCPT_FILE" "$@"
+else
+  exit 127
+fi
 
 #
 # NOTES:
