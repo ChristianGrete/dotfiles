@@ -40,7 +40,7 @@
 #   None.
 #
 # @EXIT_STATUS
-#   `0`  - Successful completion.
+#   `0`  - The file was created successfully.
 #   `>0` - An error occurred.
 #
 # @CONSEQUENCES_OF_ERRORS

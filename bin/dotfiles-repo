@@ -4,14 +4,24 @@
 #
 
 #
-# 1. Set `$PWD` to the physical path of this repository
+# 1. Prepare the local environment
+#
+
+# Use the system default value for `$PATH`
+export PATH="$(command -p 'getconf' 'PATH' 2> '/dev/null')"
+
+# Make sure that `$PATH` and `$0` are properly set
+[ -z "$PATH" -o ! -f "$0" ] && exit 126
+
+#
+# 2. Set `$PWD` to the physical path of this repository
 #
 
 # Change to the directory of the executed command's file
 cd "$(dirname "$0")"
 
 # Determine the basename of that file
-__dotfiles_repo__cli_base="$(basename "$0")"
+__dotfiles__repo__cli_base="$(basename "$0")"
 
 # Provide a POSIX compliant fallback when `readlink` is unavailable [1]
 if ! command -v 'readlink' > '/dev/null' 2>&1; then
@@ -23,28 +33,28 @@ if ! command -v 'readlink' > '/dev/null' 2>&1; then
 fi
 
 # Resolve a possible chain of symlinks to this physical file [2]
-while [ -L "$__dotfiles_repo__cli_base" ]; do
-  __dotfiles_repo__cli_base="$(readlink "$__dotfiles_repo__cli_base")"
+while [ -L "$__dotfiles__repo__cli_base" ]; do
+  __dotfiles__repo__cli_base="$(readlink "$__dotfiles__repo__cli_base")"
 
-  cd "$(dirname "$__dotfiles_repo__cli_base")"
+  cd "$(dirname "$__dotfiles__repo__cli_base")"
 
-  __dotfiles_repo__cli_base="$(basename "$__dotfiles_repo__cli_base")"
+  __dotfiles__repo__cli_base="$(basename "$__dotfiles__repo__cli_base")"
 done
 
 # Dismiss the unnecessary resulting basename
-unset -v '__dotfiles_repo__cli_base'
+unset -v '__dotfiles__repo__cli_base'
 
 # Change to the underlying canonicalized pathname of the resulting directory
 cd -P '..'
 
 #
-# 2. Provide a basic `dir` method independently and as early as possible
+# 3. Provide a basic `dir` method independently and as early as possible
 #
 
 [ "$*" = 'dir' ] && echo "$PWD" && exit
 
 #
-# 3. Run the script named in `$1` and pass the remaining parameters
+# 4. Run the script named in `$1` and pass the remaining parameters
 #
 
 # Change to the "libexec" directory
