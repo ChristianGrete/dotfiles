@@ -6,8 +6,9 @@
 #   `generate-env-file`
 #
 # @DESCRIPTION
-#   The _generate-env-file_ script shall generate a static configuration file that exports variables specifying the
-#   constant environment settings for the current host system.
+#   The _generate-env-file_ script shall generate a static configuration file
+#   that exports variables specifying the constant environment settings for the
+#   dotfiles CLI app depending on the current host system.
 #
 # @OPTIONS
 #   None.
@@ -40,11 +41,11 @@
 #   None.
 #
 # @EXIT_STATUS
-#   `0`  - The file was created successfully.
+#   `0`  - The environment file was generated successfully.
 #   `>0` - An error occurred.
 #
 # @CONSEQUENCES_OF_ERRORS
-#   The environment file shall not be created.
+#   The environment file shall not be generated.
 #
 
 readonly DOTFILES_DIR="$PWD"
@@ -64,7 +65,11 @@ dotfiles_arch=''
 
 if [ "$dotfiles_os" = 'darwin' ]; then
   # TODO:
-  # if sysctl machdep.cpu.extfeatures | grep EM64T >/dev/null; then echo amd64; else uname -m | sed 's/i386/386/'; fi
+  # if sysctl machdep.cpu.extfeatures | grep EM64T >/dev/null; then
+  #   echo amd64
+  # else
+  #   uname -m | sed 's/i386/386/'
+  # fi
   dotfiles_arch=''
 else
   dotfiles_arch="$(uname -m | sed 's/^..86$$/386/; s/^.86$$/386/; s/x86_64/amd64/; s/arm.*/arm/')"
