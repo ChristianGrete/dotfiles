@@ -50,6 +50,7 @@
 
 readonly DOTFILES_DIR="$PWD"
 readonly DOTFILES_OPT_DIR="$DOTFILES_DIR/opt"
+readonly DOTFILES_OS="$(command './libexec/determine-os')"
 readonly DOTFILES_PROVIDER='dotfiles.christiangrete.com'
 readonly DOTFILES_CLI_DIR="$DOTFILES_OPT_DIR/$DOTFILES_PROVIDER/cli"
 readonly DOTFILES_CLI_BIN_DIR="$DOTFILES_CLI_DIR/bin"
@@ -57,28 +58,16 @@ readonly DOTFILES_CLI_SCPT_FILE="$DOTFILES_CLI_BIN_DIR/dotfiles"
 readonly DOTFILES_REPO_DIR="$(dirname "$DOTFILES_DIR")"
 
 #
-# TODO: Determine host OS
-#
-
-dotfiles_os="$(uname | tr '[:upper:]' '[:lower:]' | sed 's/mingw/windows/; s/.*windows.*/windows/')"
-
-#
 # TODO: Determine host arch
 #
 
-dotfiles_arch=''
-
-if [ "$dotfiles_os" = 'darwin' ]; then
-  # TODO:
-  # if sysctl machdep.cpu.extfeatures | grep EM64T >/dev/null; then
-  #   echo amd64
-  # else
-  #   uname -m | sed 's/i386/386/'
-  # fi
-  dotfiles_arch=''
+if [ "$DOTFILES_OS" = 'darwin' ]; then
+  DOTFILES_ARCH="$(command './libexec/determine-darwin-arch')"
 else
-  dotfiles_arch="$(uname -m | sed 's/^..86$$/386/; s/^.86$$/386/; s/x86_64/amd64/; s/arm.*/arm/')"
+  DOTFILES_ARCH="$(command './libexec/determine-arch')"
 fi
+
+readonly DOTFILES_ARCH
 
 #
 # TODO: Determine CLI bin file
@@ -86,8 +75,8 @@ fi
 
 dotfiles_cli_bin_file="$DOTFILES_CLI_SCPT_FILE"
 
-if [ -n "$dotfiles_os" -a -n "$dotfiles_arch" ]; then
-  dotfiles_cli_bin_file="$dotfiles_cli_bin_file-$dotfiles_os-$dotfiles_arch"
+if [ -n "$DOTFILES_OS" -a -n "$DOTFILES_ARCH" ]; then
+  dotfiles_cli_bin_file="$dotfiles_cli_bin_file-$DOTFILES_OS-$DOTFILES_ARCH"
 fi
 
 [ ! -d './var/etc' ] && mkdir -p './var/etc'
@@ -97,14 +86,14 @@ echo "$(cat <<EOF
 # Auto generated file
 #
 
-export DOTFILES_ARCH='$dotfiles_arch'
+export DOTFILES_ARCH='$DOTFILES_ARCH'
 export DOTFILES_CLI_BIN_DIR='$DOTFILES_CLI_BIN_DIR'
 export DOTFILES_CLI_BIN_FILE='$dotfiles_cli_bin_file'
 export DOTFILES_CLI_DIR='$DOTFILES_CLI_DIR'
 export DOTFILES_CLI_SCPT_FILE='$DOTFILES_CLI_SCPT_FILE'
 export DOTFILES_DIR='$DOTFILES_DIR'
 export DOTFILES_OPT_DIR='DOTFILES_OPT_DIR'
-export DOTFILES_OS='$dotfiles_os'
+export DOTFILES_OS='$DOTFILES_OS'
 export DOTFILES_PROVIDER='$DOTFILES_PROVIDER'
 export DOTFILES_REPO_DIR='$DOTFILES_REPO_DIR'
 EOF

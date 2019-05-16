@@ -1,0 +1,3 @@
+#!/bin/sh -eu
+
+uname | tr '[:upper:]' '[:lower:]' | sed 's/mingw/windows/; s/.*windows.*/windows/'
