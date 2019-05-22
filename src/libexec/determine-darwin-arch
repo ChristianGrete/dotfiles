@@ -1,9 +1,0 @@
-#!/bin/sh -eu
-
-# TODO:
-# use system default path
-# if sysctl machdep.cpu.extfeatures | grep EM64T >/dev/null; then
-#   echo amd64
-# else
-#   uname -m | sed 's/i386/386/'
-# fi
