@@ -40,11 +40,12 @@ unset -v '__dotfiles_rc__optimized_PATH'
 #  3. Adding user-specific directories to the PATH variable
 #
 
-# Include the ~/.bin directory provided by the dotfiles base package
-PATH="$HOME/.bin:$PATH"
-
 # Include the fixed ~/.local directory when present (quaternary hierarchy) [5]
-[ -d "$HOME/.local/bin" -a -r "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
+[ -d "$HOME/.local/bin" -a -r "$HOME/.local/bin" ] \
+  && PATH="$HOME/.local/bin:$PATH"
+
+# Otherwise, include the ~/.bin directory provided by the dotfiles base package
+[ $? -ne 0 ] && PATH="$HOME/.bin:$PATH"
 
 #
 #  4. Exporting the modified PATH variable
@@ -101,18 +102,27 @@ __dotfiles_rc__rc_dir="$HOME/.rc.d"
 
 if [ -d "$__dotfiles_rc__rc_dir" -a -r "$__dotfiles_rc__rc_dir" ]; then
   for __dotfiles_rc__rc_provider_path in $(ls -1 "$__dotfiles_rc__rc_dir"); do
-    __dotfiles_rc__rc_provider_path="$__dotfiles_rc__rc_dir/$__dotfiles_rc__rc_provider_path"
+    __dotfiles_rc__rc_provider_path="$(
+      printf "$__dotfiles_rc__rc_dir/$__dotfiles_rc__rc_provider_path"
+    )"
 
     # Accept readable subdirectories only
-    [ -d "$__dotfiles_rc__rc_provider_path" -a -r "$__dotfiles_rc__rc_provider_path" ] || continue
+    [ -d "$__dotfiles_rc__rc_provider_path" \
+      -a -r "$__dotfiles_rc__rc_provider_path" ] || continue
 
-    for __dotfiles_rc__rc_source_path in $(ls -1 "$__dotfiles_rc__rc_provider_path"); do
-      __dotfiles_rc__rc_source_path="$__dotfiles_rc__rc_provider_path/$__dotfiles_rc__rc_source_path"
+    for __dotfiles_rc__rc_source_path in $(
+      ls -1 "$__dotfiles_rc__rc_provider_path"
+    ); do
+      __dotfiles_rc__rc_source_path="$(
+        printf "$__dotfiles_rc__rc_provider_path/$__dotfiles_rc__rc_source_path"
+      )"
 
       # Accept readable shell scripts only [7]
-      [ -f "$__dotfiles_rc__rc_source_path" -a -r "$__dotfiles_rc__rc_source_path" ] && \
-        [ "${__dotfiles_rc__rc_source_path%.sh}" != "$__dotfiles_rc__rc_source_path" ] && \
-          . "$__dotfiles_rc__rc_source_path"
+      [ -f "$__dotfiles_rc__rc_source_path" \
+        -a -r "$__dotfiles_rc__rc_source_path" ] \
+          && [ "${__dotfiles_rc__rc_source_path%.sh}" \
+            != "$__dotfiles_rc__rc_source_path" ] \
+              && . "$__dotfiles_rc__rc_source_path"
     done
   done
 
@@ -123,17 +133,26 @@ unset -v '__dotfiles_rc__rc_dir'
 
 #
 # NOTES:
-#  [1]  Bash instead checks whether PS1 is not empty to determine interactive shells, but that seems somehow dumb as it
-#       fails when the user decides to set a blank prompt.
-#  [2]  Since `test -t 0` fails when invoked remotely via SSH (see https://www.tldp.org/LDP/abs/html/intandnonint.html),
-#       it is also checked whether stdin is instead a named pipe.
-#  [3]  The getconf utility may needs to have a proper PATH set up before it can be executed (see
+#   [1] Bash instead checks whether `$PS1` is not empty to determine interactive
+#       shells, but that seems somehow dumb as it fails when the user decides to
+#       set a blank prompt.
+#   [2] Since `test -t 0` fails when invoked remotely via SSH (see
+#       https://www.tldp.org/LDP/abs/html/intandnonint.html), it is also checked
+#       whether "stdin" is instead a named pipe.
+#   [3] The getconf utility may needs to have a proper `$PATH` set up before it
+#       can be executed (see
 #       http://pubs.opengroup.org/onlinepubs/9699919799/utilities/command.html).
-#  [4]  /bin, /sbin and /usr/sbin are symlinks pointing to /usr/bin in the systemd file hierarchy (see
-#       https://www.freedesktop.org/software/systemd/man/file-hierarchy.html#Compatibility%20Symlinks).
-#  [5]  The systemd file hierarchy also defines a fixed directory structure for high-level user resources (see
-#       https://www.freedesktop.org/software/systemd/man/file-hierarchy.html#Home%20Directory).
-#  [6]  Additional runcoms can be put into subdirectories of ~/.rc.d whose names must be the respective provider's FQDN.
-#  [7]  Runcoms with file extensions other than .sh need to be loaded by their respective programs, e.g. .bash by Bash
-#       using ~/.bashrc or .zsh by Zsh using ~/.zshrc.
+#   [4] "/bin", "/sbin" and "/usr/sbin" are symlinks pointing to "/usr/bin" in
+#       the systemd file hierarchy (see
+#       https://www.freedesktop.org/software/systemd/man/file-hierarchy.html#Compatibility%20Symlinks
+#       ).
+#   [5] The systemd file hierarchy also defines a fixed directory structure for
+#       high-level user resources (see
+#       https://www.freedesktop.org/software/systemd/man/file-hierarchy.html#Home%20Directory
+#       ).
+#   [6] Additional runcoms can be put into subdirectories of "~/.rc.d" whose
+#       names must be the respective provider's FQDN.
+#   [7] Runcoms with file extensions other than ".sh" need to be loaded by their
+#       respective programs, e.g. ".bash" by Bash using "~/.bashrc" or ".zsh" by
+#       Zsh using "~/.zshrc".
 #
