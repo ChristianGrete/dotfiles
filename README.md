@@ -1,9 +1,3 @@
-<p align="center">
-  <a href="https://github.com/ChristianGrete/dotfiles">
-    <img alt="dotfiles" height="128" src="https://cdn.rawgit.com/ChristianGrete/dotfiles@feature/recreate-everything-but-better/assets/logo.svg" title="dotfiles" width="128">
-  </a>
-</p>
-
 # [dotfiles][repository-github-url]
 
 > TBD
