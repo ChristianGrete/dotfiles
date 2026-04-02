@@ -1,3 +1,5 @@
+[![dotfiles](assets/logo.svg "dotfiles")][repository-github-url]
+
 # [dotfiles][repository-github-url]
 
 > TBD
