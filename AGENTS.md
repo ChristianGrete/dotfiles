@@ -7,7 +7,7 @@ macOS (secondary). Designed as a self-contained, prefix-based shell environment
 with a clear separation between source, build, and install layers.
 
 **Author:** Christian Grete <webmaster@christiangrete.com>
-**Status:** Active development, pre-release, local-only (no GitHub repo yet).
+**Status:** Active development, pre-release.
 
 ## Architecture
 
@@ -21,11 +21,17 @@ into an OS-specific install location to serve as the runtime prefix.
 
 ```
 dotfiles/
+  .editorconfig         # Editor settings (2 spaces, LF, final newline)
   .gitignore            # Ignores build/**
+  .shellcheckrc         # ShellCheck config (shell=bash, disabled rules)
   AGENTS.md             # This file
   Makefile              # Entry point for build tooling
+  .github/
+    workflows/
+      check.yml         # CI: lint + build on push to non-main branches
   libexec/              # Build and install scripts (not user-facing)
     build               # Merges src/ into build/ (shared + shell-specific)
+    clean               # Selectively cleans build/ (preserves opt/var contents)
     install             # Symlinks build/<shell>/ into the OS install location
   src/
     shared/             # Shell-agnostic code (valid in both bash and zsh)
@@ -49,10 +55,10 @@ dotfiles/
         profile.bash    # Entry point for login shells
     zsh/                # Zsh-specific sources
       etc/
-        prompt.zsh      # Zsh prompt (precmd based, not yet implemented)
+        prompt.zsh      # Zsh prompt (precmd based)
       home/
-        rc.zsh          # Entry point for interactive shells (not yet implemented)
-        profile.zsh     # Entry point for login shells (not yet implemented)
+        rc.zsh          # Entry point for interactive shells
+        profile.zsh     # Entry point for login shells
   build/                # Gitignored. Never edit files here manually.
     bash/               # Merged prefix: shared + bash-specific
     zsh/                # Merged prefix: shared + zsh-specific
@@ -85,8 +91,8 @@ After building, the `build/<shell>/` directory is a self-contained prefix.
 
 1. Defaults to the current login shell (`$SHELL`).
 2. Detects the OS to determine the install path:
-   - Linux: `${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles`
-   - macOS: `$HOME/Library/Application Support/dotfiles`
+   - Linux: `${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfiles`
+   - macOS: `$HOME/Library/Application Support/com.christiangrete.dotfiles`
 3. Creates a symlink from the install path to `build/<shell>/`.
 4. Prints the exact lines to add to `~/.bashrc` / `~/.bash_profile` (or
    `~/.zshrc` / `~/.zprofile` for zsh).
@@ -98,7 +104,7 @@ The install script never modifies `~/.bashrc` or any other file in `$HOME`.
 The user adds two lines to their shell RC file:
 
 ```bash
-export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles"
+export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfiles"
 . "$DOTFILES/home/rc.bash"
 ```
 
@@ -128,12 +134,24 @@ OS. For example, both `keyfiles.linux.sh` and `keyfiles.darwin.sh` define
 
 ```
 make build      # Merge src/ into build/bash/ and build/zsh/
+make lint       # ShellCheck + syntax checks (bash -n, zsh -n)
 make install    # Symlink build/<shell>/ to OS install location
-make clean      # Delete build/ entirely
+make clean      # Selectively clean build/ (preserves opt/var contents)
 ```
+
+`make clean` does NOT blindly `rm -rf build/`. It preserves any extra content
+in `build/<shell>/opt/` and `build/<shell>/var/` (e.g., installed extensions
+or runtime state). Only derived files (etc/, home/, README.md seeds) are
+removed. The `build/` directory itself is only deleted if completely empty.
 
 Build scripts live in `libexec/` and are invoked via `Makefile`. Do not add a
 `bin/` directory or put scripts on `$PATH`.
+
+## CI
+
+The GitHub Actions workflow `.github/workflows/check.yml` runs on every push
+to non-main branches and on manual dispatch. It runs `make lint` followed by
+`make build` on `ubuntu-latest` with Zsh installed.
 
 ## Code Conventions
 
