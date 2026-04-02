@@ -1,4 +1,8 @@
-[![dotfiles](./assets/logo.svg "dotfiles")][repository-github-url]
+<p align="center">
+  <a href="https://github.com/ChristianGrete/dotfiles">
+    <img alt="dotfiles" height="128" src="assets/logo.svg" title="dotfiles" width="128">
+  </a>
+</p>
 
 # [dotfiles][repository-github-url]
 
