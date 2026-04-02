@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+has_extra_content() {
+    local dir="$1"
+
+    [[ -d "$dir" ]] || return 1
+
+    local entry
+    for entry in "$dir"/*; do
+        [[ -e "$entry" ]] || continue
+        [[ "$(basename "$entry")" == 'README.md' ]] && continue
+        return 0
+    done
+
+    return 1
+}
+
+for shell in bash zsh; do
+    # etc/ and home/ are fully derived — always safe to delete.
+    rm -rf "$REPO_DIR/build/$shell/etc" "$REPO_DIR/build/$shell/home"
+
+    # opt/ and var/ — only remove README.md, preserve everything else.
+    for dir in opt var; do
+        target="$REPO_DIR/build/$shell/$dir"
+
+        rm -f "$target/README.md"
+
+        if ! has_extra_content "$target"; then
+            rm -rf "$target"
+        fi
+    done
+
+    # Remove the shell directory itself if empty.
+    if [[ -d "$REPO_DIR/build/$shell" ]]; then
+        rmdir "$REPO_DIR/build/$shell" 2> '/dev/null' || true
+    fi
+done
+
+# Remove build/ itself if empty.
+if [[ -d "$REPO_DIR/build" ]]; then
+    rmdir "$REPO_DIR/build" 2> '/dev/null' || true
+fi
+
+printf 'Clean complete.\n'
