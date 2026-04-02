@@ -1,4 +1,4 @@
-<p align="center">[![dotfiles](./assets/logo.svg "dotfiles")][repository-github-url]</p>
+[![dotfiles](./assets/logo.svg "dotfiles")][repository-github-url]
 
 # [dotfiles][repository-github-url]
 
