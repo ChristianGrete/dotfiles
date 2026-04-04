@@ -38,6 +38,7 @@ alias gp='git_push'
 alias km='keyfiles_mount'
 alias ku='keyfiles_unmount'
 alias ll='ls -Fal'
+alias v='visual'
 
 alias branch='git_branch'
 alias pull='git_pull'

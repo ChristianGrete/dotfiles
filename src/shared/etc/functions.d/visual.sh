@@ -1,4 +1,4 @@
-v() {
+visual() {
   if [[ $# -lt 1 ]]; then
     "$VISUAL" '.'
     return
