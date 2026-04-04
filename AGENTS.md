@@ -228,6 +228,11 @@ a unified `printf` convention:
 
 - Temporary functions or variables that must not persist use the `__dotfiles_`
   prefix and are cleaned up via `unset -f` or `unset` after use.
+- Persistent internal variables (e.g., `__dotfiles_prompt_sep`) also use the
+  `__dotfiles_` prefix for clear namespace separation.
+- Well-known environment variables (`VISUAL`, `EDITOR`, `WORKSPACE`) are
+  exempt from namespacing because they follow established conventions or
+  serve as intentional user-facing exports.
 
 ## What NOT to Do
 

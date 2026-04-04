@@ -4,9 +4,9 @@ alias ....='cd ../../..'
 alias .....='cd ../../../..'
 
 if command -v 'clear' > '/dev/null' 2>&1; then
-    alias c='clear && unset __prompt_sep'
+    alias c='clear && unset __dotfiles_prompt_sep'
 else
-    alias c='tput clear && unset __prompt_sep'
+    alias c='tput clear && unset __dotfiles_prompt_sep'
 fi
 
 if command -v 'logout' > '/dev/null' 2>&1; then

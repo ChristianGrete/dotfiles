@@ -2,8 +2,8 @@ __prompt_command() {
   local out state br sign
 
   # Separator: empty line before prompt (except on the very first one).
-  local sep="${__prompt_sep:-}"
-  __prompt_sep=$'\n'
+  local sep="${__dotfiles_prompt_sep:-}"
+  __dotfiles_prompt_sep=$'\n'
 
   # Compute display path for length check (replicates \w behavior).
   local display_pwd="${PWD/#$HOME/\~}"
