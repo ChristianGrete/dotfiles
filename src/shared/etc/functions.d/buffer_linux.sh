@@ -11,22 +11,22 @@ backup_buffer() {
   local source_hash dest_hash
 
   if [[ ! -f "$source_file" ]]; then
-    printf 'Error: source file not found: %s\n' "$source_file" >&2
+    printf 'backup_buffer: source file not found: %s\n' "$source_file" >&2
     return 1
   fi
 
   if [[ ! -d "$dest_dir" ]]; then
-    printf 'Error: destination directory not found: %s\n' "$dest_dir" >&2
+    printf 'backup_buffer: destination directory not found: %s\n' "$dest_dir" >&2
     return 1
   fi
 
   if [[ -e "$dest_file" ]]; then
-    printf 'Error: destination backup already exists for today: %s\n' "$dest_file" >&2
+    printf 'backup_buffer: backup already exists for today: %s\n' "$dest_file" >&2
     return 1
   fi
 
   if [[ -e "$temp_file" ]]; then
-    printf 'Error: temporary file already exists: %s\n' "$temp_file" >&2
+    printf 'backup_buffer: temporary file already exists: %s\n' "$temp_file" >&2
     return 1
   fi
 
@@ -37,7 +37,7 @@ backup_buffer() {
     backups+=("$path")
   done
 
-  printf 'Existing backups in %s:\n' "$dest_dir"
+  printf 'backup_buffer: existing backups in %s:\n' "$dest_dir"
   if ((${#backups[@]} == 0)); then
     printf '  (none)\n'
   else
@@ -51,16 +51,16 @@ backup_buffer() {
       ;;
     3)
       oldest="${backups[0]}"
-      printf 'Deleting oldest backup: %s\n' "$oldest"
+      printf 'backup_buffer: deleting oldest backup: %s\n' "$oldest"
       rm -- "$oldest" || return 1
       ;;
     *)
-      printf 'Error: found %d matching backups; refusing to continue.\n' "${#backups[@]}" >&2
+      printf 'backup_buffer: found %d matching backups, refusing to continue.\n' "${#backups[@]}" >&2
       return 1
       ;;
   esac
 
-  printf 'Copying %s -> %s\n' "$source_file" "$temp_file"
+  printf 'backup_buffer: copying %s -> %s\n' "$source_file" "$temp_file"
   if ! cp -a -- "$source_file" "$temp_file"; then
     rm -f -- "$temp_file"
     return 1
@@ -68,20 +68,20 @@ backup_buffer() {
 
   sync "$temp_file" 2> '/dev/null' || sync
 
-  printf 'Calculating source checksum...\n'
+  printf 'backup_buffer: calculating source checksum...\n'
   read -r source_hash _ < <(sha256sum -- "$source_file") || {
     rm -f -- "$temp_file"
     return 1
   }
 
-  printf 'Calculating destination checksum...\n'
+  printf 'backup_buffer: calculating destination checksum...\n'
   read -r dest_hash _ < <(sha256sum -- "$temp_file") || {
     rm -f -- "$temp_file"
     return 1
   }
 
   if [[ "$source_hash" != "$dest_hash" ]]; then
-    printf 'Error: checksum mismatch.\n' >&2
+    printf 'backup_buffer: checksum mismatch.\n' >&2
     printf '  source: %s\n' "$source_hash" >&2
     printf '  dest:   %s\n' "$dest_hash" >&2
     rm -f -- "$temp_file"
@@ -93,7 +93,7 @@ backup_buffer() {
     return 1
   }
 
-  printf 'Backup created successfully:\n'
+  printf 'backup_buffer: backup created successfully.\n'
   stat -c '  %n | %y | %s bytes | %U:%G | %a' -- "$dest_file"
-  printf 'Checksum OK: %s\n' "$dest_hash"
+  printf 'backup_buffer: checksum ok: %s\n' "$dest_hash"
 }

@@ -6,7 +6,7 @@ keyfiles_mount() {
 
     # Prevent double-mount.
     if mountpoint -q "$mountpoint" 2> '/dev/null'; then
-        printf '%s\n' 'keyfiles: already mounted'
+        printf 'keyfiles_mount: already mounted.\n'
         return 0
     fi
 
@@ -29,7 +29,7 @@ keyfiles_mount() {
     mapper="$(sudo veracrypt -t --list "$container" 2> '/dev/null' | awk '{print $3}')"
 
     if [[ -z "$mapper" || ! -e "$mapper" ]]; then
-        printf '%s\n' 'keyfiles: failed to determine mapper device' >&2
+        printf 'keyfiles_mount: failed to determine mapper device.\n' >&2
         sudo veracrypt -t -d "$container" > '/dev/null' 2>&1
         return 1
     fi

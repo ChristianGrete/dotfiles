@@ -10,8 +10,8 @@ __dotfiles_load_functions() {
         [[ -r "$file" ]] || continue
 
         case "${file##*/}" in
-            *.linux.sh)  [[ "$os" == 'linux' ]]  || continue ;;
-            *.darwin.sh) [[ "$os" == 'darwin' ]] || continue ;;
+            *_linux.sh)  [[ "$os" == 'linux' ]]  || continue ;;
+            *_darwin.sh) [[ "$os" == 'darwin' ]] || continue ;;
         esac
 
         . "$file"

@@ -40,9 +40,10 @@ dotfiles/
         environment.sh
         functions.sh    # Loader that sources functions.d/*.sh with OS filtering
         functions.d/    # Individual function modules
+          buffer_linux.sh         # Loaded only on Linux
           git.sh                  # Always loaded
-          keyfiles.linux.sh       # Loaded only on Linux
-          keyfiles.darwin.sh      # Loaded only on macOS (Darwin)
+          keyfiles_linux.sh       # Loaded only on Linux
+          keyfiles_darwin.sh      # Loaded only on macOS (Darwin)
       opt/
         README.md       # Seed for extension install surface (future use)
       var/
@@ -122,12 +123,12 @@ This order matters: aliases reference functions, so functions must load first.
 `functions.sh` is a self-deleting loader function that iterates
 `functions.d/*.sh` and filters by OS:
 
-- `*.linux.sh` -- sourced only when `uname -s` is `Linux`.
-- `*.darwin.sh` -- sourced only when `uname -s` is `Darwin`.
+- `*_linux.sh` -- sourced only when `uname -s` is `Linux`.
+- `*_darwin.sh` -- sourced only when `uname -s` is `Darwin`.
 - `*.sh` (no OS suffix) -- always sourced on all platforms.
 
 OS-specific files provide the same function API as their counterpart on the other
-OS. For example, both `keyfiles.linux.sh` and `keyfiles.darwin.sh` define
+OS. For example, both `keyfiles_linux.sh` and `keyfiles_darwin.sh` define
 `keyfiles_mount()` and `keyfiles_unmount()`.
 
 ## Build and Test Commands
@@ -195,6 +196,26 @@ Maintain this convention consistently.
 - Prefer `printf` over `echo`.
 - Return meaningful exit codes. Use `return $?` to propagate, not `return 1` as
   a generic failure.
+
+### User-Facing Output
+
+Functions that produce user-facing messages (errors, status, progress) follow
+a unified `printf` convention:
+
+- **Always use `printf`, never `echo`** for messages. `echo` is only acceptable
+  in aliases where no flags are used.
+- **Use format strings directly.** Write `printf 'func: message.\n'`, not
+  `printf '%s\n' 'func: message.'`. Reserve `%s`, `%d`, etc. for dynamic values.
+- **Prefix every message with the function name** followed by a colon and space:
+  `printf 'backup_buffer: copying %s -> %s\n' "$src" "$dst"`.
+- **Lowercase after the prefix.** No `Error:` or `Warning:` labels -- the stderr
+  routing and exit code convey severity.
+- **Errors go to stderr (`>&2`).** Informational/progress output goes to stdout.
+- **Indented sub-output is fine** for detail lines beneath a header message:
+  `printf '  source: %s\n' "$hash" >&2`. These do not need the function prefix.
+- **Data-only output** (consumed by other functions or prompts) uses plain
+  `printf '%s' "$value"` without decoration or newline, unless the consumer
+  expects newline-delimited records.
 
 ### File Extensions
 
