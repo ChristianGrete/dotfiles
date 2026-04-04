@@ -1,4 +1,4 @@
-__prompt_precmd() {
+__dotfiles_prompt_precmd() {
   local out state br sign
 
   # Separator: empty line before prompt (except on the very first one).
@@ -60,4 +60,4 @@ __prompt_precmd() {
 }
 
 autoload -Uz add-zsh-hook
-add-zsh-hook precmd __prompt_precmd
+add-zsh-hook precmd __dotfiles_prompt_precmd

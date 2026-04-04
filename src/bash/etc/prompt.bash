@@ -1,4 +1,4 @@
-__prompt_command() {
+__dotfiles_prompt_command() {
   local out state br sign
 
   # Separator: empty line before prompt (except on the very first one).
@@ -62,9 +62,9 @@ __prompt_command() {
 # If something else already uses PROMPT_COMMAND, append ours.
 if [[ -n "${PROMPT_COMMAND-}" ]]; then
   case ";$PROMPT_COMMAND;" in
-    *";__prompt_command;"*) : ;;
-    *) PROMPT_COMMAND="${PROMPT_COMMAND};__prompt_command" ;;
+    *";__dotfiles_prompt_command;"*) : ;;
+    *) PROMPT_COMMAND="${PROMPT_COMMAND};__dotfiles_prompt_command" ;;
   esac
 else
-  PROMPT_COMMAND="__prompt_command"
+  PROMPT_COMMAND="__dotfiles_prompt_command"
 fi
