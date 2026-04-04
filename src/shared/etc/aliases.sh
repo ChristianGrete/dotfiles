@@ -15,6 +15,10 @@ else
     alias lo='exit'
 fi
 
+if command -v 'backup_buffer' > '/dev/null' 2>&1; then
+    alias bb='backup_buffer'
+fi
+
 alias g='git'
 alias ga='git add'
 alias gaa='git add --all'
