@@ -23,6 +23,8 @@ Clone this repository and run:
 make install
 ```
 
+This builds a local test artifact and links it from the current directory into the [data directory](https://docs.rs/dirs/latest/dirs/fn.data_dir.html). Any remaining steps are then printed in the terminal.
+
 ---
 
 Copyright © 2015-2026 ([MIT][repository-license-url]) [Christian Grete][repository-owner-url]
