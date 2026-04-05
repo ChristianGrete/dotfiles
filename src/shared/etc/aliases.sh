@@ -15,8 +15,8 @@ else
     alias lo='exit'
 fi
 
-if command -v 'backup_buffer' > '/dev/null' 2>&1; then
-    alias bb='backup_buffer'
+if command -v 'buffer_backup' > '/dev/null' 2>&1; then
+    alias bb='buffer_backup'
 fi
 
 alias g='git'
