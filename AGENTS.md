@@ -41,6 +41,7 @@ dotfiles/
         functions.sh    # Loader that sources functions.d/*.sh with OS filtering
         functions.d/    # Individual function modules
           buffer_linux.sh         # Loaded only on Linux
+          internals.sh            # Always loaded
           visual.sh               # Always loaded
           git.sh                  # Always loaded
           keyfiles_linux.sh       # Loaded only on Linux

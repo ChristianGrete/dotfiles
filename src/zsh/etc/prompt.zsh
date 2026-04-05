@@ -15,7 +15,7 @@ __dotfiles_prompt_precmd() {
 
   # Git segment (optional).
   local git_line=""
-  out="$(prompt_git 2> '/dev/null')" || out=""
+  out="$(__dotfiles_prompt_git 2> '/dev/null')" || out=""
   if [[ -n "$out" ]]; then
     local IFS=$'\t'
     read -r state br <<< "$out"

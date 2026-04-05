@@ -13,6 +13,21 @@ git_branch() {
     printf '%s' "${ref#refs/heads/}"
 }
 
+git_hash() {
+    command git rev-parse HEAD
+}
+
+git_nuke() {
+    local branch="$1"
+
+    if [[ -z "$branch" ]]; then
+        printf 'git_nuke: no branch name given.\n' >&2
+        return 1
+    fi
+
+    command git branch -D "$branch" && command git push 'origin' --delete "$branch"
+}
+
 git_pull() {
     local remote='origin'
     local branch
@@ -61,16 +76,4 @@ git_state() {
 
     # Clean.
     return 0
-}
-
-prompt_git() {
-    local branch state
-
-    branch="$(git_branch)" || return 0
-    [[ -n "$branch" ]] || return 0
-
-    git_state
-    state=$?
-
-    printf '%s\t%s\n' "$state" "$branch"
 }
