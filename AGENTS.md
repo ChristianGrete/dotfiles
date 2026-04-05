@@ -208,7 +208,7 @@ a unified `printf` convention:
 - **Use format strings directly.** Write `printf 'func: message.\n'`, not
   `printf '%s\n' 'func: message.'`. Reserve `%s`, `%d`, etc. for dynamic values.
 - **Prefix every message with the function name** followed by a colon and space:
-  `printf 'buffer_backup: copying %s -> %s\n' "$src" "$dst"`.
+  `printf 'git_pull: pulling from %s\n' "$remote"`.
 - **Lowercase after the prefix.** No `Error:` or `Warning:` labels -- the stderr
   routing and exit code convey severity.
 - **Errors go to stderr (`>&2`).** Informational/progress output goes to stdout.
