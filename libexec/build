@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+for shell in bash zsh; do
+    printf 'Building %s...\n' "$shell"
+
+    # etc/ and home/ are fully derived — safe to recreate from scratch.
+    rm -rf "$REPO_DIR/build/$shell/etc" "$REPO_DIR/build/$shell/home"
+
+    # Merge shared/etc/ as base, then overlay shell-specific etc/ on top.
+    mkdir -p "$REPO_DIR/build/$shell/etc"
+    cp -R "$REPO_DIR/src/shared/etc/." "$REPO_DIR/build/$shell/etc/"
+
+    if [[ -d "$REPO_DIR/src/$shell/etc" ]]; then
+        cp -R "$REPO_DIR/src/$shell/etc/." "$REPO_DIR/build/$shell/etc/"
+    fi
+
+    # Copy shell-specific home/.
+    mkdir -p "$REPO_DIR/build/$shell/home"
+    cp -R "$REPO_DIR/src/$shell/home/." "$REPO_DIR/build/$shell/home/"
+
+    # Seed opt/ and var/ with READMEs (don't touch existing contents).
+    mkdir -p "$REPO_DIR/build/$shell/opt" "$REPO_DIR/build/$shell/var"
+    cp "$REPO_DIR/src/shared/opt/README.md" "$REPO_DIR/build/$shell/opt/README.md"
+    cp "$REPO_DIR/src/shared/var/README.md" "$REPO_DIR/build/$shell/var/README.md"
+done
+
+printf 'Build complete.\n'
