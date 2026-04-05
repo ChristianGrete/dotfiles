@@ -46,6 +46,7 @@ dotfiles/
           git.sh                  # Always loaded
           keyfiles_linux.sh       # Loaded only on Linux
           keyfiles_darwin.sh      # Loaded only on macOS (Darwin)
+          utils.sh                # Always loaded
       opt/
         README.md       # Seed for extension install surface (future use)
       var/
