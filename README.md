@@ -9,6 +9,20 @@ After going way too far down the UNIX history rabbit hole years ago, I came up w
 
 This repo is the more realistic, grown-up version. It supports Linux and macOS, with Bash and Zsh only.
 
+## Getting started
+
+This project is still a work in progress and currently behaves more like a living standard than a properly versioned release stream, even though platform- and shell-specific release artifacts may eventually happen. Then again, judging by the fate of my last two overly ambitious dotfiles projects, who knows if it will ever get that far.
+
+Until then, you can simply clone the repository and use `make` to build a locally usable setup.
+
+### Installation
+
+Clone this repository and run:
+
+```sh
+make install
+```
+
 ---
 
 Copyright © 2015-2026 ([MIT][repository-license-url]) [Christian Grete][repository-owner-url]
