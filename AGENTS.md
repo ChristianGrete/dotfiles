@@ -53,12 +53,14 @@ dotfiles/
         README.md       # Seed for mutable runtime state (future use)
     bash/               # Bash-specific sources
       etc/
+        loaders.bash    # One-time loader functions
         prompt.bash     # Bash prompt (PROMPT_COMMAND based)
       home/
         rc.bash         # Entry point for interactive shells
         profile.bash    # Entry point for login shells
     zsh/                # Zsh-specific sources
       etc/
+        loaders.zsh     # One-time loader functions
         prompt.zsh      # Zsh prompt (precmd based)
       home/
         rc.zsh          # Entry point for interactive shells
