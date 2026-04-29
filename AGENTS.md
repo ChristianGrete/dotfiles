@@ -118,23 +118,35 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 . "$DOTFILES/home/rc.bash"
 ```
 
+And two lines to their shell profile file (`~/.bash_profile` or `~/.zprofile`):
+
+```bash
+export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfiles"
+. "$DOTFILES/home/profile.bash"
+```
+
 `rc.bash` (or `rc.zsh`) sources internal modules in deterministic order:
 
 1. `$DOTFILES/etc/environment.sh` -- exported variables
 2. `$DOTFILES/etc/functions.sh` -- OS-aware function loader
 3. `$DOTFILES/etc/aliases.sh` -- aliases (may reference functions)
 4. `$DOTFILES/etc/prompt.bash` -- shell-specific prompt setup
+5. `fastfetch` -- system info on startup (skipped in VS Code terminal)
+6. `$DOTFILES/etc/loaders/veracrypt.bash` -- VeraCrypt dotfile sourcing
 
 This order matters: aliases reference functions, so functions must load first.
+Loaders run last because they may depend on all preceding modules.
 
 ### OS-Specific Function Dispatch
 
-`functions.sh` is a self-deleting loader function that iterates
-`functions.d/*.sh` and filters by OS:
+`functions.sh` delegates to a shared loader defined in `loaders/functions.sh`.
+The loader iterates `functions.d/*.sh` and filters by OS:
 
 - `*_linux.sh` -- sourced only when `uname -s` is `Linux`.
 - `*_darwin.sh` -- sourced only when `uname -s` is `Darwin`.
 - `*.sh` (no OS suffix) -- always sourced on all platforms.
+
+The loader function (`__dotfiles_loader_functions`) is unset after use.
 
 OS-specific files provide the same function API as their counterpart on the other
 OS. For example, both `keyfiles_linux.sh` and `keyfiles_darwin.sh` define
@@ -238,6 +250,10 @@ a unified `printf` convention:
   prefix and are cleaned up via `unset -f` or `unset` after use.
 - Persistent internal variables (e.g., `__dotfiles_prompt_sep`) also use the
   `__dotfiles_` prefix for clear namespace separation.
+- Loader functions use the `__dotfiles_loader_*` subnamespace (e.g.,
+  `__dotfiles_loader_functions`, `__dotfiles_loader_veracrypt`).
+- Prompt internals use the `__dotfiles_prompt_*` subnamespace (e.g.,
+  `__dotfiles_prompt_git`, `__dotfiles_prompt_git_state`).
 - Well-known environment variables (`VISUAL`, `EDITOR`, `WORKSPACE`) are
   exempt from namespacing because they follow established conventions or
   serve as intentional user-facing exports.
