@@ -11,6 +11,6 @@ if [[ "$TERM_PROGRAM" != 'vscode' ]] && command -v 'fastfetch' > '/dev/null' 2>&
 fi
 
 # Source loaders for one-time setup tasks.
-. "$DOTFILES/etc/loaders.bash"
-__dotfiles_veracrypt_source '.bashrc'
-unset -f __dotfiles_veracrypt_source
+. "$DOTFILES/etc/loaders/veracrypt.bash"
+__dotfiles_loader_veracrypt '.bashrc'
+unset -f __dotfiles_loader_veracrypt

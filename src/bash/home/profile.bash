@@ -1,4 +1,4 @@
 # Source loaders for one-time setup tasks.
-. "$DOTFILES/etc/loaders.bash"
-__dotfiles_veracrypt_source '.bash_profile'
-unset -f __dotfiles_veracrypt_source
+. "$DOTFILES/etc/loaders/veracrypt.bash"
+__dotfiles_loader_veracrypt '.bash_profile'
+unset -f __dotfiles_loader_veracrypt

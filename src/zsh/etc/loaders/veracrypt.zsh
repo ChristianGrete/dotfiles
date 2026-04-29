@@ -1,7 +1,7 @@
-# Loader functions for bash entry points (rc.bash, profile.bash).
-# Functions defined here are intended to be called once and then unset.
+# Source dotfiles from mounted VeraCrypt volumes.
+# Intended to be called once and then unset.
 
-__dotfiles_veracrypt_source() {
+__dotfiles_loader_veracrypt() {
     local target="$1"
     local dir path answer
 

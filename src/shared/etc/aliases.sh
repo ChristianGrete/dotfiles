@@ -19,6 +19,7 @@ if command -v 'buffer_backup' > '/dev/null' 2>&1; then
     alias bb='buffer_backup'
 fi
 
+alias d='deno'
 alias g='git'
 alias ga='git add'
 alias gaa='git add --all'
@@ -41,6 +42,10 @@ alias km='keyfiles_mount'
 alias ku='keyfiles_unmount'
 alias ll='ls -Fal'
 alias mkd='enter_new_dir'
+alias n='npm'
+alias ni='npm i'
+alias p='pnpm'
+alias pi='pnpm i'
 alias v='visual'
 
 alias branch='git_branch'

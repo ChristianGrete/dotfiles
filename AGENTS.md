@@ -38,7 +38,9 @@ dotfiles/
       etc/              # Internal modules sourced by rc.bash / rc.zsh
         aliases.sh
         environment.sh
-        functions.sh    # Loader that sources functions.d/*.sh with OS filtering
+        functions.sh    # Sources functions.d/*.sh via shared loader
+        loaders/        # Shared loader function definitions
+          functions.sh  # OS-aware function module loader
         functions.d/    # Individual function modules
           buffer_linux.sh         # Loaded only on Linux
           internals.sh            # Always loaded
@@ -53,14 +55,16 @@ dotfiles/
         README.md       # Seed for mutable runtime state (future use)
     bash/               # Bash-specific sources
       etc/
-        loaders.bash    # One-time loader functions
+        loaders/        # Bash-specific loader function definitions
+          veracrypt.bash  # VeraCrypt dotfile sourcing
         prompt.bash     # Bash prompt (PROMPT_COMMAND based)
       home/
         rc.bash         # Entry point for interactive shells
         profile.bash    # Entry point for login shells
     zsh/                # Zsh-specific sources
       etc/
-        loaders.zsh     # One-time loader functions
+        loaders/        # Zsh-specific loader function definitions
+          veracrypt.zsh   # VeraCrypt dotfile sourcing
         prompt.zsh      # Zsh prompt (precmd based)
       home/
         rc.zsh          # Entry point for interactive shells
