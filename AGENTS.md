@@ -88,6 +88,9 @@ in `functions.d/` (see below), not via separate directory trees.
    - Deletes `build/<shell>/etc/` and `build/<shell>/home/` (fully derived).
    - Copies `src/shared/etc/` as base into `build/<shell>/etc/`.
    - Overlays `src/<shell>/etc/` on top (shell-specific files win).
+   - Replaces build-time placeholders in `environment.sh`:
+     - `__DOTFILES_SHELL__` with the current shell name (`bash` or `zsh`).
+     - `__DOTFILES_VERSION__` with the current git short commit hash.
    - Copies `src/<shell>/home/` into `build/<shell>/home/`.
    - Seeds `build/<shell>/opt/` and `build/<shell>/var/` with `README.md`
      without deleting existing contents (these directories may contain installed

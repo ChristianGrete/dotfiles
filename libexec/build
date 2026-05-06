@@ -2,6 +2,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+VERSION="$(git -C "$REPO_DIR" rev-parse --short HEAD 2> '/dev/null' || printf 'unknown')"
 
 for shell in bash zsh; do
     printf 'Building %s...\n' "$shell"
@@ -16,6 +17,13 @@ for shell in bash zsh; do
     if [[ -d "$REPO_DIR/src/$shell/etc" ]]; then
         cp -R "$REPO_DIR/src/$shell/etc/." "$REPO_DIR/build/$shell/etc/"
     fi
+
+    # Replace build-time placeholders in environment.sh.
+    local_env="$REPO_DIR/build/$shell/etc/environment.sh"
+    sed "s/__DOTFILES_SHELL__/$shell/" "$local_env" > "${local_env}.tmp"
+    mv "${local_env}.tmp" "$local_env"
+    sed "s/__DOTFILES_VERSION__/$VERSION/" "$local_env" > "${local_env}.tmp"
+    mv "${local_env}.tmp" "$local_env"
 
     # Copy shell-specific home/.
     mkdir -p "$REPO_DIR/build/$shell/home"
