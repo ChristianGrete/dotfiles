@@ -1,3 +1,8 @@
+# Separate login message from subsequent output.
+if [[ ! -e "$HOME/.hushlogin" ]]; then
+    printf '\n'
+fi
+
 # Bootstrap dotfiles environment.
 . "$DOTFILES/etc/bootstrap.sh"
 
