@@ -15,5 +15,5 @@ __dotfiles_loader_veracrypt() {
         [[ "$answer" == [yY] ]] || continue
 
         . "$path"
-    done < <(find '/media' -maxdepth 1 -name 'veracrypt*' -type d 2> '/dev/null' | sort)
+    done < <(find '/media' -maxdepth 1 -name 'veracrypt*' -type d 2> '/dev/null' | command sort)
 }
