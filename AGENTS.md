@@ -37,6 +37,7 @@ dotfiles/
     shared/             # Shell-agnostic code (valid in both bash and zsh)
       etc/              # Internal modules sourced by rc.bash / rc.zsh
         aliases.sh
+        bootstrap.sh    # Self-guarded DOTFILES_* exports (sourced first)
         environment.sh
         functions.sh    # Sources functions.d/*.sh via shared loader
         loaders/        # Shared loader function definitions
@@ -88,7 +89,7 @@ in `functions.d/` (see below), not via separate directory trees.
    - Deletes `build/<shell>/etc/` and `build/<shell>/home/` (fully derived).
    - Copies `src/shared/etc/` as base into `build/<shell>/etc/`.
    - Overlays `src/<shell>/etc/` on top (shell-specific files win).
-   - Replaces build-time placeholders in `environment.sh`:
+   - Replaces build-time placeholders in `bootstrap.sh`:
      - `__DOTFILES_SHELL__` with the current shell name (`bash` or `zsh`).
      - `__DOTFILES_VERSION__` with the current git short commit hash.
    - Copies `src/<shell>/home/` into `build/<shell>/home/`.
@@ -130,12 +131,18 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 
 `rc.bash` (or `rc.zsh`) sources internal modules in deterministic order:
 
-1. `$DOTFILES/etc/environment.sh` -- exported variables
-2. `$DOTFILES/etc/functions.sh` -- OS-aware function loader
-3. `$DOTFILES/etc/aliases.sh` -- aliases (may reference functions)
-4. `$DOTFILES/etc/prompt.bash` -- shell-specific prompt setup
-5. `fastfetch` -- system info on startup (skipped in VS Code terminal)
-6. `$DOTFILES/etc/loaders/veracrypt.bash` -- VeraCrypt dotfile sourcing
+1. `$DOTFILES/etc/bootstrap.sh` -- self-guarded DOTFILES_OS, DOTFILES_SHELL, DOTFILES_VERSION
+2. `$DOTFILES/etc/environment.sh` -- exported variables
+3. `$DOTFILES/etc/functions.sh` -- OS-aware function loader
+4. `$DOTFILES/etc/aliases.sh` -- aliases (may reference functions)
+5. `$DOTFILES/etc/prompt.bash` -- shell-specific prompt setup
+6. `fastfetch` -- system info on startup (skipped in VS Code terminal)
+7. `$DOTFILES/etc/loaders/veracrypt.bash` -- VeraCrypt dotfile sourcing (Linux only)
+
+`profile.bash` (or `profile.zsh`) sources `bootstrap.sh` first, then runs
+one-time loaders (e.g., VeraCrypt). This ensures `DOTFILES_OS` is available
+before any loader that needs it. Since `bootstrap.sh` is self-guarded, sourcing
+it in both profile and rc is safe and incurs no extra cost.
 
 This order matters: aliases reference functions, so functions must load first.
 Loaders run last because they may depend on all preceding modules.
@@ -143,10 +150,10 @@ Loaders run last because they may depend on all preceding modules.
 ### OS-Specific Function Dispatch
 
 `functions.sh` delegates to a shared loader defined in `loaders/functions.sh`.
-The loader iterates `functions.d/*.sh` and filters by OS:
+The loader iterates `functions.d/*.sh` and filters by `$DOTFILES_OS`:
 
-- `*_linux.sh` -- sourced only when `uname -s` is `Linux`.
-- `*_darwin.sh` -- sourced only when `uname -s` is `Darwin`.
+- `*_linux.sh` -- sourced only when `$DOTFILES_OS` is `linux`.
+- `*_darwin.sh` -- sourced only when `$DOTFILES_OS` is `darwin`.
 - `*.sh` (no OS suffix) -- always sourced on all platforms.
 
 The loader function (`__dotfiles_loader_functions`) is unset after use.

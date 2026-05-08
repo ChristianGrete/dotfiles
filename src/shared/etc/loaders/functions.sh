@@ -2,16 +2,14 @@
 # Intended to be called once and then unset.
 
 __dotfiles_loader_functions() {
-    local os file
-
-    os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+    local file
 
     for file in "$DOTFILES/etc/functions.d/"*.sh; do
         [[ -r "$file" ]] || continue
 
         case "${file##*/}" in
-            *_linux.sh)  [[ "$os" == 'linux' ]]  || continue ;;
-            *_darwin.sh) [[ "$os" == 'darwin' ]] || continue ;;
+            *_linux.sh)  [[ "$DOTFILES_OS" == 'linux' ]]  || continue ;;
+            *_darwin.sh) [[ "$DOTFILES_OS" == 'darwin' ]] || continue ;;
         esac
 
         . "$file"
