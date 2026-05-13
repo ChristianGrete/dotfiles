@@ -14,6 +14,8 @@ __dotfiles_loader_veracrypt() {
         printf '\n'
         [[ "$answer" == [yY] ]] || continue
 
+        export __DOTFILES_LOADER_VERACRYPT_PATH="$dir"
         . "$path"
+        unset __DOTFILES_LOADER_VERACRYPT_PATH
     done < <(find '/media' -maxdepth 1 -name 'veracrypt*' -type d 2> '/dev/null' | command sort)
 }
