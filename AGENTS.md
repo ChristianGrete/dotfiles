@@ -43,6 +43,7 @@ dotfiles/
         loaders/        # Shared loader function definitions
           functions.sh  # OS-aware function module loader
         functions.d/    # Individual function modules
+          appledouble_linux.sh    # Loaded only on Linux
           buffer_linux.sh         # Loaded only on Linux
           internals.sh            # Always loaded
           visual.sh               # Always loaded
@@ -136,13 +137,17 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 3. `$DOTFILES/etc/functions.sh` -- OS-aware function loader
 4. `$DOTFILES/etc/aliases.sh` -- aliases (may reference functions)
 5. `$DOTFILES/etc/prompt.bash` -- shell-specific prompt setup
-6. `fastfetch` -- system info on startup (skipped in VS Code terminal)
-7. `$DOTFILES/etc/loaders/veracrypt.bash` -- VeraCrypt dotfile sourcing (Linux only)
+6. `$DOTFILES/etc/loaders/veracrypt.bash` -- VeraCrypt dotfile sourcing (Linux only)
+7. `fastfetch` -- system info on startup (skipped in VS Code terminal)
 
 `profile.bash` (or `profile.zsh`) sources `bootstrap.sh` first, then runs
 one-time loaders (e.g., VeraCrypt). This ensures `DOTFILES_OS` is available
 before any loader that needs it. Since `bootstrap.sh` is self-guarded, sourcing
 it in both profile and rc is safe and incurs no extra cost.
+
+The profile files also print a separating newline after the OS login message
+(e.g., macOS "Last login:") unless `~/.hushlogin` exists. This check runs
+before `bootstrap.sh` since it has no dependencies.
 
 This order matters: aliases reference functions, so functions must load first.
 Loaders run last because they may depend on all preceding modules.
@@ -262,6 +267,9 @@ a unified `printf` convention:
   `__dotfiles_` prefix for clear namespace separation.
 - Loader functions use the `__dotfiles_loader_*` subnamespace (e.g.,
   `__dotfiles_loader_functions`, `__dotfiles_loader_veracrypt`).
+- Loader-internal temporary variables use the `__DOTFILES_LOADER_*` subnamespace
+  in UPPER_CASE (e.g., `__DOTFILES_LOADER_VERACRYPT_PATH`). These are exported
+  only for the duration of a single source call, then immediately unset.
 - Prompt internals use the `__dotfiles_prompt_*` subnamespace (e.g.,
   `__dotfiles_prompt_git`, `__dotfiles_prompt_git_state`).
 - Well-known environment variables (`VISUAL`, `EDITOR`, `WORKSPACE`) are
