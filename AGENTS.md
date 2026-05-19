@@ -42,6 +42,7 @@ dotfiles/
         functions.sh    # Sources functions.d/*.sh via shared loader
         loaders/        # Shared loader function definitions
           functions.sh  # OS-aware function module loader
+          veracrypt.sh  # VeraCrypt dotfile sourcing (Linux only)
         functions.d/    # Individual function modules
           appledouble_linux.sh    # Loaded only on Linux
           buffer_linux.sh         # Loaded only on Linux
@@ -57,16 +58,12 @@ dotfiles/
         README.md       # Seed for mutable runtime state (future use)
     bash/               # Bash-specific sources
       etc/
-        loaders/        # Bash-specific loader function definitions
-          veracrypt.bash  # VeraCrypt dotfile sourcing
         prompt.bash     # Bash prompt (PROMPT_COMMAND based)
       home/
         rc.bash         # Entry point for interactive shells
         profile.bash    # Entry point for login shells
     zsh/                # Zsh-specific sources
       etc/
-        loaders/        # Zsh-specific loader function definitions
-          veracrypt.zsh   # VeraCrypt dotfile sourcing
         prompt.zsh      # Zsh prompt (precmd based)
       home/
         rc.zsh          # Entry point for interactive shells
@@ -137,7 +134,7 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 3. `$DOTFILES/etc/functions.sh` -- OS-aware function loader
 4. `$DOTFILES/etc/aliases.sh` -- aliases (may reference functions)
 5. `$DOTFILES/etc/prompt.bash` -- shell-specific prompt setup
-6. `$DOTFILES/etc/loaders/veracrypt.bash` -- VeraCrypt dotfile sourcing (Linux only)
+6. `$DOTFILES/etc/loaders/veracrypt.sh` -- VeraCrypt dotfile sourcing (Linux only)
 7. `fastfetch` -- system info on startup (skipped in VS Code terminal)
 
 `profile.bash` (or `profile.zsh`) sources `bootstrap.sh` first, then runs

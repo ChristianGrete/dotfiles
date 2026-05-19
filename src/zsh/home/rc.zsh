@@ -7,7 +7,7 @@
 
 # Source loaders for one-time setup tasks.
 if [[ "$DOTFILES_OS" == 'linux' ]]; then
-    . "$DOTFILES/etc/loaders/veracrypt.zsh"
+    . "$DOTFILES/etc/loaders/veracrypt.sh"
     __dotfiles_loader_veracrypt '.zshrc'
     unset -f __dotfiles_loader_veracrypt
 fi
