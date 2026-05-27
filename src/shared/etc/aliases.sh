@@ -23,6 +23,10 @@ else
     alias lo='exit'
 fi
 
+if command -v 'password-copy' > '/dev/null' 2>&1; then
+    alias pc='password-copy'
+fi
+
 alias g='git'
 alias ga='git add'
 alias gaa='git add --all'
