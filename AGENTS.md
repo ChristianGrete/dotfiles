@@ -45,6 +45,7 @@ dotfiles/
           veracrypt.sh  # VeraCrypt dotfile sourcing (Linux only)
         functions.d/    # Individual function modules
           appledouble_linux.sh    # Loaded only on Linux
+          brew_darwin.sh          # Loaded only on macOS (Darwin)
           buffer_linux.sh         # Loaded only on Linux
           internals.sh            # Always loaded
           visual.sh               # Always loaded
@@ -54,6 +55,9 @@ dotfiles/
           utils.sh                # Always loaded
       opt/
         README.md       # Seed for extension install surface (future use)
+      home/             # Shell-agnostic home artefacts
+        Brewfile.rb     # Homebrew package list (macOS)
+        default.gitconfig  # Git defaults (included by ~/.gitconfig)
       var/
         README.md       # Seed for mutable runtime state (future use)
     bash/               # Bash-specific sources
@@ -90,7 +94,8 @@ in `functions.d/` (see below), not via separate directory trees.
    - Replaces build-time placeholders in `bootstrap.sh`:
      - `__DOTFILES_SHELL__` with the current shell name (`bash` or `zsh`).
      - `__DOTFILES_VERSION__` with the current git short commit hash.
-   - Copies `src/<shell>/home/` into `build/<shell>/home/`.
+   - Copies `src/shared/home/` as base into `build/<shell>/home/`.
+   - Overlays `src/<shell>/home/` on top (shell-specific files win).
    - Seeds `build/<shell>/opt/` and `build/<shell>/var/` with `README.md`
      without deleting existing contents (these directories may contain installed
      extensions or runtime state during development).

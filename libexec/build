@@ -25,8 +25,9 @@ for shell in bash zsh; do
     sed "s/__DOTFILES_VERSION__/$VERSION/" "$local_bootstrap" > "${local_bootstrap}.tmp"
     mv "${local_bootstrap}.tmp" "$local_bootstrap"
 
-    # Copy shell-specific home/.
+    # Merge shared/home/ as base, then overlay shell-specific home/ on top.
     mkdir -p "$REPO_DIR/build/$shell/home"
+    cp -R "$REPO_DIR/src/shared/home/." "$REPO_DIR/build/$shell/home/"
     cp -R "$REPO_DIR/src/$shell/home/." "$REPO_DIR/build/$shell/home/"
 
     # Seed opt/ and var/ with READMEs (don't touch existing contents).
