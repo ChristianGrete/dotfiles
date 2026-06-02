@@ -2,6 +2,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+VERSION="$(git -C "$REPO_DIR" rev-parse --short HEAD 2> '/dev/null' || printf 'unknown')"
 
 for shell in bash zsh; do
     printf 'Building %s...\n' "$shell"
@@ -17,8 +18,16 @@ for shell in bash zsh; do
         cp -R "$REPO_DIR/src/$shell/etc/." "$REPO_DIR/build/$shell/etc/"
     fi
 
-    # Copy shell-specific home/.
+    # Replace build-time placeholders in bootstrap.sh.
+    local_bootstrap="$REPO_DIR/build/$shell/etc/bootstrap.sh"
+    sed "s/__DOTFILES_SHELL__/$shell/" "$local_bootstrap" > "${local_bootstrap}.tmp"
+    mv "${local_bootstrap}.tmp" "$local_bootstrap"
+    sed "s/__DOTFILES_VERSION__/$VERSION/" "$local_bootstrap" > "${local_bootstrap}.tmp"
+    mv "${local_bootstrap}.tmp" "$local_bootstrap"
+
+    # Merge shared/home/ as base, then overlay shell-specific home/ on top.
     mkdir -p "$REPO_DIR/build/$shell/home"
+    cp -R "$REPO_DIR/src/shared/home/." "$REPO_DIR/build/$shell/home/"
     cp -R "$REPO_DIR/src/$shell/home/." "$REPO_DIR/build/$shell/home/"
 
     # Seed opt/ and var/ with READMEs (don't touch existing contents).
