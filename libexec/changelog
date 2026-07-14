@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Find the most recent tag, if any.
+last_tag="$(git -C "$REPO_DIR" describe --tags --abbrev=0 2> '/dev/null' || true)"
+
+if [[ -n "$last_tag" ]]; then
+    range="${last_tag}..HEAD"
+else
+    range='HEAD'
+fi
+
+# Print commit subjects since the last tag as a bullet list (data-only output).
+git -C "$REPO_DIR" log --no-merges --pretty='- %s (%h)' "$range"

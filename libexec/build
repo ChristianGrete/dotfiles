@@ -2,38 +2,13 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="$(git -C "$REPO_DIR" rev-parse --short HEAD 2> '/dev/null' || printf 'unknown')"
 
-for shell in bash zsh; do
-    printf 'Building %s...\n' "$shell"
+# shellcheck source=libexec/_common
+. "$REPO_DIR/libexec/_common"
 
-    # etc/ and home/ are fully derived — safe to recreate from scratch.
-    rm -rf "$REPO_DIR/build/$shell/etc" "$REPO_DIR/build/$shell/home"
+# Dev builds are identified by the current git short commit hash.
+version="$(git -C "$REPO_DIR" rev-parse --short HEAD 2> '/dev/null' || printf 'unknown')"
 
-    # Merge shared/etc/ as base, then overlay shell-specific etc/ on top.
-    mkdir -p "$REPO_DIR/build/$shell/etc"
-    cp -R "$REPO_DIR/src/shared/etc/." "$REPO_DIR/build/$shell/etc/"
-
-    if [[ -d "$REPO_DIR/src/$shell/etc" ]]; then
-        cp -R "$REPO_DIR/src/$shell/etc/." "$REPO_DIR/build/$shell/etc/"
-    fi
-
-    # Replace build-time placeholders in bootstrap.sh.
-    local_bootstrap="$REPO_DIR/build/$shell/etc/bootstrap.sh"
-    sed "s/__DOTFILES_SHELL__/$shell/" "$local_bootstrap" > "${local_bootstrap}.tmp"
-    mv "${local_bootstrap}.tmp" "$local_bootstrap"
-    sed "s/__DOTFILES_VERSION__/$VERSION/" "$local_bootstrap" > "${local_bootstrap}.tmp"
-    mv "${local_bootstrap}.tmp" "$local_bootstrap"
-
-    # Merge shared/home/ as base, then overlay shell-specific home/ on top.
-    mkdir -p "$REPO_DIR/build/$shell/home"
-    cp -R "$REPO_DIR/src/shared/home/." "$REPO_DIR/build/$shell/home/"
-    cp -R "$REPO_DIR/src/$shell/home/." "$REPO_DIR/build/$shell/home/"
-
-    # Seed opt/ and var/ with READMEs (don't touch existing contents).
-    mkdir -p "$REPO_DIR/build/$shell/opt" "$REPO_DIR/build/$shell/var"
-    cp "$REPO_DIR/src/shared/opt/README.md" "$REPO_DIR/build/$shell/opt/README.md"
-    cp "$REPO_DIR/src/shared/var/README.md" "$REPO_DIR/build/$shell/var/README.md"
-done
+dotfiles_build "$REPO_DIR" 'build' "$version"
 
 printf 'Build complete.\n'

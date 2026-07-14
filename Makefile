@@ -1,4 +1,4 @@
-.PHONY: build bump clean install lint
+.PHONY: build bump changelog clean dist install lint
 
 build:
 	@libexec/build
@@ -6,8 +6,14 @@ build:
 bump:
 	@libexec/bump $(LEVEL)
 
+changelog:
+	@libexec/changelog
+
 clean:
 	@libexec/clean
+
+dist:
+	@libexec/dist
 
 install: build
 	@libexec/install
