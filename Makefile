@@ -1,7 +1,10 @@
-.PHONY: build clean install lint
+.PHONY: build bump clean install lint
 
 build:
 	@libexec/build
+
+bump:
+	@libexec/bump $(LEVEL)
 
 clean:
 	@libexec/clean
