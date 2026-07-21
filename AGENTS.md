@@ -39,6 +39,8 @@ dotfiles/
     clean               # Selectively cleans build/ (preserves opt/var contents)
     dist                # Merges src/ into dist/ (release build, SemVer version)
     install             # Symlinks build/<shell>/ into the OS install location
+    release             # Orchestrates a release (bump, stamp, dist, commit, tag)
+    stamp               # Stamps a release section into CHANGELOG.md
   src/
     shared/             # Shell-agnostic code (valid in both bash and zsh)
       etc/              # Internal modules sourced by rc.bash / rc.zsh
@@ -185,6 +187,7 @@ make clean              # Selectively clean build/ (preserves opt/var contents)
 make bump LEVEL=patch   # Bump VERSION (patch/minor/major)
 make dist               # Merge src/ into dist/ (release build, SemVer version)
 make changelog          # Print commit subjects since the last tag
+make release LEVEL=patch  # Full local release (bump, stamp, dist, commit, tag)
 ```
 
 `make clean` does NOT blindly `rm -rf build/`. It preserves any extra content
@@ -209,17 +212,23 @@ but differ in intent:
 
 ### Release Process (Model B: tagged dist, clean main)
 
-Releases are automated (planned: a `workflow_dispatch` GitHub Action). The flow:
+Releases are orchestrated by `libexec/release <level>`, which runs locally and
+is wrapped by a `workflow_dispatch` GitHub Action. The orchestrator:
 
-1. Bump `VERSION` (`libexec/bump patch|minor|major`).
-2. Update `CHANGELOG.md` (from `libexec/changelog`).
-3. Commit `VERSION` + `CHANGELOG.md` to `main` (source only).
-4. `make dist`, then `git add -f dist/` and commit the build.
-5. Sign-tag `vX.Y.Z` on the build commit.
-6. Push the tag (not the build commit) so `main` stays free of generated code.
+1. Bumps `VERSION` (`libexec/bump`).
+2. Stamps `CHANGELOG.md` with the new version and commits since the last tag
+   (`libexec/stamp`, which calls `libexec/changelog`).
+3. Commits `VERSION` + `CHANGELOG.md` to the current branch (source only).
+4. Builds `dist/` (`libexec/dist`) and commits it as a separate build commit
+   via `git add -f dist/`.
+5. Sign-tags `vX.Y.Z` on the build commit.
+6. Resets the branch back to the source commit, leaving the build commit
+   dangling and referenced only by the tag.
 
-This keeps `main` source-only while the tag carries the full `dist/` artifact.
-`VERSION` starts at `0.0.0` and is bumped by tooling -- never edit it by hand.
+`libexec/release` does NOT push. The caller (the Action, or the user) pushes the
+branch and the tag afterwards. This keeps `main` source-only while the tag
+carries the full `dist/` artifact. `VERSION` starts at `0.0.0` and is bumped by
+tooling -- never edit it by hand.
 
 ## CI
 

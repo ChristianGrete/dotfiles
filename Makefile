@@ -1,4 +1,4 @@
-.PHONY: build bump changelog clean dist install lint
+.PHONY: build bump changelog clean dist install lint release
 
 build:
 	@libexec/build
@@ -27,3 +27,6 @@ lint:
 	@if command -v zsh > /dev/null 2>&1; then \
 		find src -name '*.zsh' | sort | xargs -I{} zsh -n {}; \
 	fi
+
+release:
+	@libexec/release $(LEVEL)
