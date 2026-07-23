@@ -30,7 +30,8 @@ dotfiles/
   VERSION               # Single source of truth for the release SemVer
   .github/
     workflows/
-      check.yml         # CI: lint + build on push to non-main branches
+      check.yml         # CI: lint + build on pull requests to main
+      release.yml       # Release: bump, changelog, dist, sign-tag, publish
   libexec/              # Build and install scripts (not user-facing)
     _common             # Shared build logic sourced by build and dist
     build               # Merges src/ into build/ (dev build, git hash version)
@@ -232,9 +233,15 @@ tooling -- never edit it by hand.
 
 ## CI
 
-The GitHub Actions workflow `.github/workflows/check.yml` runs on every push
-to non-main branches and on manual dispatch. It runs `make lint` followed by
+The GitHub Actions workflow `.github/workflows/check.yml` runs on pull requests
+targeting `main` and on manual dispatch. It runs `make lint` followed by
 `make build` on `ubuntu-latest` with Zsh installed.
+
+The `.github/workflows/release.yml` workflow (manual `workflow_dispatch`, with a
+`patch`/`minor`/`major` input) runs the release orchestrator. It restores the
+SSH signing key from the `SIGNING_KEY` secret and pushes as a repository admin
+via the `RELEASE_TOKEN` PAT -- required because the `main` branch ruleset cannot
+grant a bypass to the default `GITHUB_TOKEN`.
 
 ## Code Conventions
 
@@ -342,9 +349,6 @@ a unified `printf` convention:
 
 These are documented for context only. Do not build any of this:
 
-- **Release GitHub Action:** A `workflow_dispatch` workflow that runs the local
-  release tooling (`bump`, `changelog`, `dist`), commits, sign-tags, and pushes
-  per the Model B flow. Needs a signing key as a CI secret.
 - **Extension system:** Extensions install into `opt/<provider>/<name>/` and
   activate via numbered symlinks in `var/dotfiles/extensions.d/`. Provider
   namespace follows reverse-DNS (`dotfiles.christiangrete.com`).
@@ -353,5 +357,6 @@ These are documented for context only. Do not build any of this:
 - **Separate `dotfiles-min` project:** A standalone Rust project (own repo) that
   consumes the `dist/` artifact and produces a concatenated, single-file
   `rc.bash` / `rc.zsh` for performance. Does not belong in this repository.
-- **GitHub releases:** Publish versioned `dist/` artifacts that install without
-  cloning the repository.
+- **Cloneless install:** Fetch a published release artifact and install it
+  without cloning the repository. Currently `make install` requires a local
+  clone.
