@@ -27,7 +27,7 @@ version="$(< "$REPO_DIR/VERSION")"
 
 # 3. Commit the source changes (VERSION + CHANGELOG.md) to the current branch.
 git -C "$REPO_DIR" add VERSION CHANGELOG.md
-git -C "$REPO_DIR" commit -m "Release v$version"
+git -C "$REPO_DIR" commit -m "bump(version): $version"
 release_commit="$(git -C "$REPO_DIR" rev-parse HEAD)"
 
 # 4. Build the pristine dist/ artifact.
@@ -35,10 +35,10 @@ release_commit="$(git -C "$REPO_DIR" rev-parse HEAD)"
 
 # 5. Commit the build artifact (force-add, since dist/ is gitignored).
 git -C "$REPO_DIR" add -f dist
-git -C "$REPO_DIR" commit -m "Build v$version"
+git -C "$REPO_DIR" commit -m "build(dist): v$version"
 
 # 6. Sign-tag the build commit.
-git -C "$REPO_DIR" tag -s "v$version" -m "Release v$version"
+git -C "$REPO_DIR" tag -s "v$version" -m "release(tag): $version"
 
 # 7. Reset the branch back to the source commit. The build commit survives as a
 #    dangling commit referenced only by the tag, keeping the branch clean.
