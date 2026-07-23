@@ -59,6 +59,10 @@ alias pull='git_pull'
 alias push='git_push'
 
 # Potential extension candidates (tool-specific, non-system-native).
+if command -v 'diffusion-calc-resolutions' > '/dev/null' 2>&1; then
+    alias dcr='diffusion-calc-resolutions'
+fi
+
 alias d='deno'
 alias n='npm'
 alias ni='npm i'

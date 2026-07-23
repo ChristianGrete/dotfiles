@@ -5,7 +5,7 @@ appledouble_clean() {
     local dry_run=false
     local count=0
 
-    if [[ "${1:-}" == '--dry-run' ]]; then
+    if [[ "${1:-}" == '--dry-run' || "${1:-}" == '-n' ]]; then
         dry_run=true
     fi
 

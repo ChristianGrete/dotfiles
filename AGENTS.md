@@ -22,17 +22,26 @@ into an OS-specific install location to serve as the runtime prefix.
 ```
 dotfiles/
   .editorconfig         # Editor settings (2 spaces, LF, final newline)
-  .gitignore            # Ignores build/**
+  .gitignore            # Ignores build/** and dist/**
   .shellcheckrc         # ShellCheck config (shell=bash, disabled rules)
   AGENTS.md             # This file
+  CHANGELOG.md          # Keep a Changelog format, updated on release
   Makefile              # Entry point for build tooling
+  VERSION               # Single source of truth for the release SemVer
   .github/
     workflows/
-      check.yml         # CI: lint + build on push to non-main branches
+      check.yml         # CI: lint + build on pull requests to main
+      release.yml       # Release: bump, changelog, dist, sign-tag, publish
   libexec/              # Build and install scripts (not user-facing)
-    build               # Merges src/ into build/ (shared + shell-specific)
+    _common             # Shared build logic sourced by build and dist
+    build               # Merges src/ into build/ (dev build, git hash version)
+    bump                # Bumps VERSION (patch/minor/major)
+    changelog           # Prints commit subjects since the last tag
     clean               # Selectively cleans build/ (preserves opt/var contents)
+    dist                # Merges src/ into dist/ (release build, SemVer version)
     install             # Symlinks build/<shell>/ into the OS install location
+    release             # Orchestrates a release (bump, stamp, dist, commit, tag)
+    stamp               # Stamps a release section into CHANGELOG.md
   src/
     shared/             # Shell-agnostic code (valid in both bash and zsh)
       etc/              # Internal modules sourced by rc.bash / rc.zsh
@@ -172,10 +181,14 @@ OS. For example, both `keyfiles_linux.sh` and `keyfiles_darwin.sh` define
 ## Build and Test Commands
 
 ```
-make build      # Merge src/ into build/bash/ and build/zsh/
-make lint       # ShellCheck + syntax checks (bash -n, zsh -n)
-make install    # Symlink build/<shell>/ to OS install location
-make clean      # Selectively clean build/ (preserves opt/var contents)
+make build              # Merge src/ into build/bash/ and build/zsh/ (dev)
+make lint               # ShellCheck + syntax checks (bash -n, zsh -n)
+make install            # Symlink build/<shell>/ to OS install location
+make clean              # Selectively clean build/ (preserves opt/var contents)
+make bump LEVEL=patch   # Bump VERSION (patch/minor/major)
+make dist               # Merge src/ into dist/ (release build, SemVer version)
+make changelog          # Print commit subjects since the last tag
+make release LEVEL=patch  # Full local release (bump, stamp, dist, commit, tag)
 ```
 
 `make clean` does NOT blindly `rm -rf build/`. It preserves any extra content
@@ -184,13 +197,51 @@ or runtime state). Only derived files (etc/, home/, README.md seeds) are
 removed. The `build/` directory itself is only deleted if completely empty.
 
 Build scripts live in `libexec/` and are invoked via `Makefile`. Do not add a
-`bin/` directory or put scripts on `$PATH`.
+`bin/` directory or put scripts on `$PATH`. `libexec/build` and `libexec/dist`
+share their core logic via `libexec/_common` (sourced, not executed).
+
+## Build vs. Dist
+
+`build/` and `dist/` are produced by the same core logic (`libexec/_common`)
+but differ in intent:
+
+- **`build/`** -- dev artifact. Gitignored. Version is the git short hash.
+  Rebuilt in place, preserves `opt/`/`var/` contents. Used by `make install`.
+- **`dist/`** -- release artifact. Gitignored on `main`, force-added only into
+  the tagged release commit. Version is the SemVer from the `VERSION` file.
+  Always rebuilt from scratch (pristine).
+
+### Release Process (Model B: tagged dist, clean main)
+
+Releases are orchestrated by `libexec/release <level>`, which runs locally and
+is wrapped by a `workflow_dispatch` GitHub Action. The orchestrator:
+
+1. Bumps `VERSION` (`libexec/bump`).
+2. Stamps `CHANGELOG.md` with the new version and commits since the last tag
+   (`libexec/stamp`, which calls `libexec/changelog`).
+3. Commits `VERSION` + `CHANGELOG.md` to the current branch (source only).
+4. Builds `dist/` (`libexec/dist`) and commits it as a separate build commit
+   via `git add -f dist/`.
+5. Sign-tags `vX.Y.Z` on the build commit.
+6. Resets the branch back to the source commit, leaving the build commit
+   dangling and referenced only by the tag.
+
+`libexec/release` does NOT push. The caller (the Action, or the user) pushes the
+branch and the tag afterwards. This keeps `main` source-only while the tag
+carries the full `dist/` artifact. `VERSION` starts at `0.0.0` and is bumped by
+tooling -- never edit it by hand.
 
 ## CI
 
-The GitHub Actions workflow `.github/workflows/check.yml` runs on every push
-to non-main branches and on manual dispatch. It runs `make lint` followed by
+The GitHub Actions workflow `.github/workflows/check.yml` runs on pull requests
+targeting `main` and on manual dispatch. It runs `make lint` followed by
 `make build` on `ubuntu-latest` with Zsh installed.
+
+The `.github/workflows/release.yml` workflow (manual `workflow_dispatch`, with a
+`patch`/`minor`/`major` input) runs the release orchestrator. It restores the
+SSH signing key from the `SIGNING_KEY` secret and pushes as a repository admin
+via the `RELEASE_TOKEN` PAT -- required because the `main` branch ruleset cannot
+grant a bypass to the default `GITHUB_TOKEN`.
 
 ## Code Conventions
 
@@ -280,12 +331,12 @@ a unified `printf` convention:
 
 ## What NOT to Do
 
-- Do not add a `dist/` directory. It is planned for later (release artifacts).
 - Do not add an extension/package system. The `opt/` and `var/` directories and
   `extensions.d/` activation model are planned for later.
 - Do not add NVM, PNPM, or other tool-specific setup to the dotfiles. Those
   belong in the user's `~/.bashrc` until dedicated extensions exist.
-- Do not modify files in `build/`. They are generated by `libexec/build`.
+- Do not modify files in `build/` or `dist/`. They are generated artifacts.
+- Do not edit `VERSION` by hand. It is bumped by `libexec/bump`.
 - Do not add a `bin/` directory. All tooling goes through `libexec/` via the
   `Makefile`.
 - Do not write POSIX-only shell code. This is a Bash/Zsh project.
@@ -298,17 +349,14 @@ a unified `printf` convention:
 
 These are documented for context only. Do not build any of this:
 
-- **`dist/` directory:** A release-quality prefix built by concatenating
-  `src/shared/etc/*.sh` and shell-specific files into a single `rc.bash` /
-  `rc.zsh` for performance. Tracked in git with selective ignores for extension
-  artifacts.
 - **Extension system:** Extensions install into `opt/<provider>/<name>/` and
   activate via numbered symlinks in `var/dotfiles/extensions.d/`. Provider
   namespace follows reverse-DNS (`dotfiles.christiangrete.com`).
 - **Extension install pipeline:** Clone into `var/git/`, build, link into
   `opt/`, activate via symlink.
-- **Rust-based builder:** Replace shell-based `libexec/build` with a Rust tool
-  that handles intelligent concatenation, dependency resolution, and prompt
-  string generation.
-- **GitHub releases:** Publish versioned `dist/` artifacts that install without
-  cloning the repository.
+- **Separate `dotfiles-min` project:** A standalone Rust project (own repo) that
+  consumes the `dist/` artifact and produces a concatenated, single-file
+  `rc.bash` / `rc.zsh` for performance. Does not belong in this repository.
+- **Cloneless install:** Fetch a published release artifact and install it
+  without cloning the repository. Currently `make install` requires a local
+  clone.
