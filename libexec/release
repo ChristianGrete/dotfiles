@@ -14,8 +14,8 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 level="${1:-}"
 
 if [[ "$level" != 'patch' && "$level" != 'minor' && "$level" != 'major' ]]; then
-    printf 'Error: invalid release level "%s". Use "patch", "minor", or "major".\n' "$level" >&2
-    exit 1
+  printf 'Error: invalid release level "%s". Use "patch", "minor", or "major".\n' "$level" >&2
+  exit 1
 fi
 
 # 1. Bump VERSION and read the resulting SemVer.

@@ -4,27 +4,27 @@ alias ....='cd ../../..'
 alias .....='cd ../../../..'
 
 if command -v 'appledouble_clean' > '/dev/null' 2>&1; then
-    alias adc='appledouble_clean'
+  alias adc='appledouble_clean'
 fi
 
 if command -v 'buffer_backup' > '/dev/null' 2>&1; then
-    alias bb='buffer_backup'
+  alias bb='buffer_backup'
 fi
 
 if command -v 'clear' > '/dev/null' 2>&1; then
-    alias c='clear && unset __dotfiles_prompt_sep'
+  alias c='clear && unset __dotfiles_prompt_sep'
 else
-    alias c='tput clear && unset __dotfiles_prompt_sep'
+  alias c='tput clear && unset __dotfiles_prompt_sep'
 fi
 
 if command -v 'logout' > '/dev/null' 2>&1; then
-    alias lo='logout 2> /dev/null || exit 0'
+  alias lo='logout 2> /dev/null || exit 0'
 else
-    alias lo='exit'
+  alias lo='exit'
 fi
 
 if command -v 'password-copy' > '/dev/null' 2>&1; then
-    alias pc='password-copy'
+  alias pc='password-copy'
 fi
 
 alias g='git'
@@ -60,7 +60,7 @@ alias push='git_push'
 
 # Potential extension candidates (tool-specific, non-system-native).
 if command -v 'diffusion-calc-resolutions' > '/dev/null' 2>&1; then
-    alias dcr='diffusion-calc-resolutions'
+  alias dcr='diffusion-calc-resolutions'
 fi
 
 alias d='deno'

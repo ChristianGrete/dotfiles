@@ -5,11 +5,11 @@
 
 # Skip if the environment already initialized compsys (compdef would exist).
 if (( ! $+functions[compdef] )); then
-    autoload -Uz compinit
+  autoload -Uz compinit
 
-    # Cache the dumped completion database inside the prefix (regenerable).
-    [[ -d "$DOTFILES/var/cache" ]] || mkdir -p "$DOTFILES/var/cache"
+  # Cache the dumped completion database inside the prefix (regenerable).
+  [[ -d "$DOTFILES/var/cache" ]] || mkdir -p "$DOTFILES/var/cache"
 
-    # On macOS with Homebrew, add -i here if insecure-directory prompts appear.
-    compinit -d "$DOTFILES/var/cache/zcompdump"
+  # On macOS with Homebrew, add -i here if insecure-directory prompts appear.
+  compinit -d "$DOTFILES/var/cache/zcompdump"
 fi
