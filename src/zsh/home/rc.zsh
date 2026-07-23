@@ -3,6 +3,7 @@
 . "$DOTFILES/etc/environment.sh"
 . "$DOTFILES/etc/functions.sh"
 . "$DOTFILES/etc/aliases.sh"
+. "$DOTFILES/etc/completions.zsh"
 . "$DOTFILES/etc/prompt.zsh"
 
 # Source loaders for one-time setup tasks.
