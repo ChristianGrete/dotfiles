@@ -3,8 +3,11 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-# Find the most recent tag, if any.
-last_tag="$(git -C "$REPO_DIR" describe --tags --abbrev=0 2> '/dev/null' || true)"
+# Find the highest-versioned tag, if any. Use for-each-ref (not describe) because
+# in the Model B layout the tag lives on a dangling build commit that is not an
+# ancestor of the branch HEAD, so describe cannot reach it. --count=1 avoids a
+# pipe (no SIGPIPE surprises under pipefail).
+last_tag="$(git -C "$REPO_DIR" for-each-ref --sort=-version:refname --format='%(refname:short)' --count=1 refs/tags)"
 
 if [[ -n "$last_tag" ]]; then
     range="${last_tag}..HEAD"
@@ -13,4 +16,6 @@ else
 fi
 
 # Print commit subjects since the last tag as a bullet list (data-only output).
-git -C "$REPO_DIR" log --no-merges --pretty='- %s (%h)' "$range"
+# Exclude the automated bump commit so it never surfaces in release notes.
+git -C "$REPO_DIR" log --no-merges --invert-grep --grep='^bump(version):' \
+    --pretty='- %s (%h)' "$range"
