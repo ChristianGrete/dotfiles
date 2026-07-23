@@ -336,6 +336,15 @@ a unified `printf` convention:
 - `.bash` -- bash-specific. Used in `src/bash/`.
 - `.zsh` -- zsh-specific. Used in `src/zsh/`.
 
+### Formatting and File Modes
+
+- All files use two-space indentation (per `.editorconfig`), except the
+  `Makefile`, which uses tabs as required by make.
+- Only the executable `libexec/` commands are `755` (`build`, `bump`,
+  `changelog`, `clean`, `dist`, `install`, `release`, `stamp`). Everything else
+  -- sourced `src/` modules, `libexec/_common`, data files, and READMEs -- is
+  `644`.
+
 ### Internal Naming
 
 - Temporary functions or variables that must not persist use the `__dotfiles_`
