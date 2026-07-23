@@ -1,0 +1,22 @@
+[commit]
+	gpgsign = true
+[core]
+	editor = code -w
+[gpg]
+	format = ssh
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
+[push]
+	default = current
+[tag]
+	gpgsign = true
+[user]
+	email = webmaster@christiangrete.com
+	name = Christian Grete
