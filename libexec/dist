@@ -8,16 +8,16 @@ VERSION_FILE="$REPO_DIR/VERSION"
 . "$REPO_DIR/libexec/_common"
 
 if [[ ! -f "$VERSION_FILE" ]]; then
-    printf 'Error: VERSION file not found: %s\n' "$VERSION_FILE" >&2
-    exit 1
+  printf 'Error: VERSION file not found: %s\n' "$VERSION_FILE" >&2
+  exit 1
 fi
 
 version="$(< "$VERSION_FILE")"
 
 # Release builds require a plain SemVer (X.Y.Z) from the VERSION file.
 if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    printf 'Error: VERSION does not contain a valid SemVer: "%s"\n' "$version" >&2
-    exit 1
+  printf 'Error: VERSION does not contain a valid SemVer: "%s"\n' "$version" >&2
+  exit 1
 fi
 
 # dist/ is a pristine release artifact — always rebuild from scratch.

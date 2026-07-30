@@ -22,11 +22,14 @@ into an OS-specific install location to serve as the runtime prefix.
 ```
 dotfiles/
   .editorconfig         # Editor settings (2 spaces, LF, final newline)
-  .gitignore            # Ignores build/** and dist/**
+  .gitignore            # Ignores .DS_Store, build/** and dist/**
   .shellcheckrc         # ShellCheck config (shell=bash, disabled rules)
   AGENTS.md             # This file
   CHANGELOG.md          # Keep a Changelog format, updated on release
+  CODEOWNERS            # Code owner (@ChristianGrete) for all paths
+  LICENSE               # MIT license
   Makefile              # Entry point for build tooling
+  README.md             # Project overview
   VERSION               # Single source of truth for the release SemVer
   .github/
     workflows/
@@ -71,12 +74,14 @@ dotfiles/
         README.md       # Seed for mutable runtime state (future use)
     bash/               # Bash-specific sources
       etc/
+        completions.bash  # Lazy alias completion wiring (bash-completion)
         prompt.bash     # Bash prompt (PROMPT_COMMAND based)
       home/
         rc.bash         # Entry point for interactive shells
         profile.bash    # Entry point for login shells
     zsh/                # Zsh-specific sources
       etc/
+        completions.zsh   # compinit bootstrap (aliases inherit via expansion)
         prompt.zsh      # Zsh prompt (precmd based)
       home/
         rc.zsh          # Entry point for interactive shells
@@ -147,9 +152,11 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 2. `$DOTFILES/etc/environment.sh` -- exported variables
 3. `$DOTFILES/etc/functions.sh` -- OS-aware function loader
 4. `$DOTFILES/etc/aliases.sh` -- aliases (may reference functions)
-5. `$DOTFILES/etc/prompt.bash` -- shell-specific prompt setup
-6. `$DOTFILES/etc/loaders/veracrypt.sh` -- VeraCrypt dotfile sourcing (Linux only)
-7. `fastfetch` -- system info on startup (skipped in VS Code terminal)
+5. `$DOTFILES/etc/completions.bash` -- lazy alias completion wiring (bash);
+   `completions.zsh` runs `compinit` on zsh
+6. `$DOTFILES/etc/prompt.bash` -- shell-specific prompt setup
+7. `$DOTFILES/etc/loaders/veracrypt.sh` -- VeraCrypt dotfile sourcing (Linux only)
+8. `fastfetch` -- system info on startup (skipped in VS Code terminal)
 
 `profile.bash` (or `profile.zsh`) sources `bootstrap.sh` first, then runs
 one-time loaders (e.g., VeraCrypt). This ensures `DOTFILES_OS` is available
@@ -162,6 +169,26 @@ before `bootstrap.sh` since it has no dependencies.
 
 This order matters: aliases reference functions, so functions must load first.
 Loaders run last because they may depend on all preceding modules.
+
+### Shell Completion
+
+Aliases do not inherit their target command's completion automatically, so the
+`completions.*` modules bridge that gap -- differently per shell:
+
+- **Bash** (`completions.bash`): Bash has no alias-expansion-before-completion,
+  so each wrapper must be wired explicitly. The module registers a single
+  one-shot stub on the relevant aliases via `complete -F`. On the first
+  completion of any of them, the stub loads the real completions (git's
+  `__git_complete` for subcommand-aware aliases like `gb`/`gco`, and a
+  spec-clone for whole-command wrappers like `p`/`n`/`d`), rewires every alias,
+  and returns `124` so readline retries with the installed completion. This
+  lazy model mirrors bash-completion itself: no cost until the first `TAB`.
+- **Zsh** (`completions.zsh`): With `complete_aliases` unset (the default) zsh
+  expands an alias before completing it, so wrappers inherit completion for
+  free once compsys is active. The module only runs `compinit` (guarded so it
+  is skipped when the environment already initialized it), caching the dumped
+  database at `$DOTFILES/var/cache/zcompdump` (regenerable runtime state, hence
+  `var/cache/`).
 
 ### OS-Specific Function Dispatch
 
@@ -311,6 +338,15 @@ a unified `printf` convention:
 - `.sh` -- shell-agnostic (bash + zsh compatible). Used in `src/shared/`.
 - `.bash` -- bash-specific. Used in `src/bash/`.
 - `.zsh` -- zsh-specific. Used in `src/zsh/`.
+
+### Formatting and File Modes
+
+- All files use two-space indentation (per `.editorconfig`), except the
+  `Makefile`, which uses tabs as required by make.
+- Only the executable `libexec/` commands are `755` (`build`, `bump`,
+  `changelog`, `clean`, `dist`, `install`, `release`, `stamp`). Everything else
+  -- sourced `src/` modules, `libexec/_common`, data files, and READMEs -- is
+  `644`.
 
 ### Internal Naming
 

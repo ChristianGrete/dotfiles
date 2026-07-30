@@ -10,18 +10,18 @@ CHANGELOG_FILE="$REPO_DIR/CHANGELOG.md"
 version="${1:-}"
 
 if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    printf 'Error: invalid version "%s". Expected a SemVer (X.Y.Z).\n' "$version" >&2
-    exit 1
+  printf 'Error: invalid version "%s". Expected a SemVer (X.Y.Z).\n' "$version" >&2
+  exit 1
 fi
 
 if [[ ! -f "$CHANGELOG_FILE" ]]; then
-    printf 'Error: CHANGELOG.md not found: %s\n' "$CHANGELOG_FILE" >&2
-    exit 1
+  printf 'Error: CHANGELOG.md not found: %s\n' "$CHANGELOG_FILE" >&2
+  exit 1
 fi
 
 if ! grep -q '^## \[Unreleased\]' "$CHANGELOG_FILE"; then
-    printf 'Error: CHANGELOG.md has no "## [Unreleased]" section.\n' >&2
-    exit 1
+  printf 'Error: CHANGELOG.md has no "## [Unreleased]" section.\n' >&2
+  exit 1
 fi
 
 date="$(date +%F)"
@@ -34,12 +34,12 @@ section="## [$version] - $date"$'\n\n'"$entries"
 
 # Insert the new section immediately after the [Unreleased] heading.
 awk -v block="$section" '
-    { print }
-    /^## \[Unreleased\]/ && !done {
-        print ""
-        print block
-        done = 1
-    }
+  { print }
+  /^## \[Unreleased\]/ && !done {
+    print ""
+    print block
+    done = 1
+  }
 ' "$CHANGELOG_FILE" > "${CHANGELOG_FILE}.tmp"
 mv "${CHANGELOG_FILE}.tmp" "$CHANGELOG_FILE"
 

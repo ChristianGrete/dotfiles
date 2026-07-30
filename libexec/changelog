@@ -10,12 +10,12 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 last_tag="$(git -C "$REPO_DIR" for-each-ref --sort=-version:refname --format='%(refname:short)' --count=1 refs/tags)"
 
 if [[ -n "$last_tag" ]]; then
-    range="${last_tag}..HEAD"
+  range="${last_tag}..HEAD"
 else
-    range='HEAD'
+  range='HEAD'
 fi
 
 # Print commit subjects since the last tag as a bullet list (data-only output).
 # Exclude the automated bump commit so it never surfaces in release notes.
 git -C "$REPO_DIR" log --no-merges --invert-grep --grep='^bump(version):' \
-    --pretty='- %s (%h)' "$range"
+  --pretty='- %s (%h)' "$range"

@@ -5,42 +5,42 @@
 # given version into bootstrap.sh. Does not delete the target base directory
 # wholesale, so callers that need a pristine artifact should clean it first.
 dotfiles_build() {
-    local repo_dir="$1"
-    local target="$2"
-    local version="$3"
+  local repo_dir="$1"
+  local target="$2"
+  local version="$3"
 
-    local out="$repo_dir/$target"
-    local shell local_bootstrap
+  local out="$repo_dir/$target"
+  local shell local_bootstrap
 
-    for shell in bash zsh; do
-        printf 'Building %s/%s...\n' "$target" "$shell"
+  for shell in bash zsh; do
+    printf 'Building %s/%s...\n' "$target" "$shell"
 
-        # etc/ and home/ are fully derived — safe to recreate from scratch.
-        rm -rf "${out:?}/$shell/etc" "${out:?}/$shell/home"
+    # etc/ and home/ are fully derived — safe to recreate from scratch.
+    rm -rf "${out:?}/$shell/etc" "${out:?}/$shell/home"
 
-        # Merge shared/etc/ as base, then overlay shell-specific etc/ on top.
-        mkdir -p "$out/$shell/etc"
-        cp -R "$repo_dir/src/shared/etc/." "$out/$shell/etc/"
+    # Merge shared/etc/ as base, then overlay shell-specific etc/ on top.
+    mkdir -p "$out/$shell/etc"
+    cp -R "$repo_dir/src/shared/etc/." "$out/$shell/etc/"
 
-        if [[ -d "$repo_dir/src/$shell/etc" ]]; then
-            cp -R "$repo_dir/src/$shell/etc/." "$out/$shell/etc/"
-        fi
+    if [[ -d "$repo_dir/src/$shell/etc" ]]; then
+      cp -R "$repo_dir/src/$shell/etc/." "$out/$shell/etc/"
+    fi
 
-        # Replace build-time placeholders in bootstrap.sh.
-        local_bootstrap="$out/$shell/etc/bootstrap.sh"
-        sed "s/__DOTFILES_SHELL__/$shell/" "$local_bootstrap" > "${local_bootstrap}.tmp"
-        mv "${local_bootstrap}.tmp" "$local_bootstrap"
-        sed "s/__DOTFILES_VERSION__/$version/" "$local_bootstrap" > "${local_bootstrap}.tmp"
-        mv "${local_bootstrap}.tmp" "$local_bootstrap"
+    # Replace build-time placeholders in bootstrap.sh.
+    local_bootstrap="$out/$shell/etc/bootstrap.sh"
+    sed "s/__DOTFILES_SHELL__/$shell/" "$local_bootstrap" > "${local_bootstrap}.tmp"
+    mv "${local_bootstrap}.tmp" "$local_bootstrap"
+    sed "s/__DOTFILES_VERSION__/$version/" "$local_bootstrap" > "${local_bootstrap}.tmp"
+    mv "${local_bootstrap}.tmp" "$local_bootstrap"
 
-        # Merge shared/home/ as base, then overlay shell-specific home/ on top.
-        mkdir -p "$out/$shell/home"
-        cp -R "$repo_dir/src/shared/home/." "$out/$shell/home/"
-        cp -R "$repo_dir/src/$shell/home/." "$out/$shell/home/"
+    # Merge shared/home/ as base, then overlay shell-specific home/ on top.
+    mkdir -p "$out/$shell/home"
+    cp -R "$repo_dir/src/shared/home/." "$out/$shell/home/"
+    cp -R "$repo_dir/src/$shell/home/." "$out/$shell/home/"
 
-        # Seed opt/ and var/ with READMEs (don't touch existing contents).
-        mkdir -p "$out/$shell/opt" "$out/$shell/var"
-        cp "$repo_dir/src/shared/opt/README.md" "$out/$shell/opt/README.md"
-        cp "$repo_dir/src/shared/var/README.md" "$out/$shell/var/README.md"
-    done
+    # Seed opt/ and var/ with READMEs (don't touch existing contents).
+    mkdir -p "$out/$shell/opt" "$out/$shell/var"
+    cp "$repo_dir/src/shared/opt/README.md" "$out/$shell/opt/README.md"
+    cp "$repo_dir/src/shared/var/README.md" "$out/$shell/var/README.md"
+  done
 }

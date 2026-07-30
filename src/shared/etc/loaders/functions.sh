@@ -2,16 +2,16 @@
 # Intended to be called once and then unset.
 
 __dotfiles_loader_functions() {
-    local file
+  local file
 
-    for file in "$DOTFILES/etc/functions.d/"*.sh; do
-        [[ -r "$file" ]] || continue
+  for file in "$DOTFILES/etc/functions.d/"*.sh; do
+    [[ -r "$file" ]] || continue
 
-        case "${file##*/}" in
-            *_linux.sh)  [[ "$DOTFILES_OS" == 'linux' ]]  || continue ;;
-            *_darwin.sh) [[ "$DOTFILES_OS" == 'darwin' ]] || continue ;;
-        esac
+    case "${file##*/}" in
+      *_linux.sh)  [[ "$DOTFILES_OS" == 'linux' ]]  || continue ;;
+      *_darwin.sh) [[ "$DOTFILES_OS" == 'darwin' ]] || continue ;;
+    esac
 
-        . "$file"
-    done
+    . "$file"
+  done
 }
