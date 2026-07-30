@@ -22,11 +22,14 @@ into an OS-specific install location to serve as the runtime prefix.
 ```
 dotfiles/
   .editorconfig         # Editor settings (2 spaces, LF, final newline)
-  .gitignore            # Ignores build/** and dist/**
+  .gitignore            # Ignores .DS_Store, build/** and dist/**
   .shellcheckrc         # ShellCheck config (shell=bash, disabled rules)
   AGENTS.md             # This file
   CHANGELOG.md          # Keep a Changelog format, updated on release
+  CODEOWNERS            # Code owner (@ChristianGrete) for all paths
+  LICENSE               # MIT license
   Makefile              # Entry point for build tooling
+  README.md             # Project overview
   VERSION               # Single source of truth for the release SemVer
   .github/
     workflows/
