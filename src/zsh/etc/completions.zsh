@@ -10,6 +10,6 @@ if (( ! $+functions[compdef] )); then
   # Cache the dumped completion database inside the prefix (regenerable).
   [[ -d "$DOTFILES/var/cache" ]] || mkdir -p "$DOTFILES/var/cache"
 
-  # On macOS with Homebrew, add -i here if insecure-directory prompts appear.
-  compinit -d "$DOTFILES/var/cache/zcompdump"
+  # -i: skip security check for group-writable dirs (Homebrew on macOS).
+  compinit -i -d "$DOTFILES/var/cache/zcompdump"
 fi
