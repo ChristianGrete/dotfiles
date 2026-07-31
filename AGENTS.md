@@ -189,6 +189,12 @@ Aliases do not inherit their target command's completion automatically, so the
   is skipped when the environment already initialized it), caching the dumped
   database at `$DOTFILES/var/cache/zcompdump` (regenerable runtime state, hence
   `var/cache/`).
+- **Custom function wrappers** (`git_pull`/`git_push`/`git_nuke`,
+  `appledouble_clean`) have no command to inherit from, so both modules
+  hand-wire small completers: git refs (branches, plus remotes at the remote
+  position) read at completion time, and the `--dry-run`/`-n` flag for
+  `appledouble_clean`. Their aliases are covered too -- bound explicitly in
+  Bash, inherited via alias expansion in Zsh.
 
 ### OS-Specific Function Dispatch
 
