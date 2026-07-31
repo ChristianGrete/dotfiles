@@ -33,7 +33,7 @@ dotfiles/
   VERSION               # Single source of truth for the release SemVer
   .github/
     workflows/
-      check.yml         # CI: lint + build on pull requests to main
+      check.yml         # CI: lint + build + smoke on pull requests to main
       release.yml       # Release: bump, changelog, dist, sign-tag, publish
   libexec/              # Build and install scripts (not user-facing)
     _common             # Shared build logic sourced by build and dist
@@ -44,6 +44,7 @@ dotfiles/
     dist                # Merges src/ into dist/ (release build, SemVer version)
     install             # Symlinks build/<shell>/ into the OS install location
     release             # Orchestrates a release (bump, stamp, dist, commit, tag)
+    smoke               # Loads the built prefix in each shell, asserts its API
     stamp               # Stamps a release section into CHANGELOG.md
   src/
     shared/             # Shell-agnostic code (valid in both bash and zsh)
@@ -219,6 +220,7 @@ OS. For example, both `keyfiles_linux.sh` and `keyfiles_darwin.sh` define
 ```
 make build              # Merge src/ into build/bash/ and build/zsh/ (dev)
 make lint               # ShellCheck + syntax checks (bash -n, zsh -n)
+make smoke              # Load the built prefix in each shell and assert its API
 make install            # Symlink build/<shell>/ to OS install location
 make clean              # Selectively clean build/ (preserves opt/var contents)
 make bump LEVEL=patch   # Bump VERSION (patch/minor/major)
@@ -270,8 +272,8 @@ tooling -- never edit it by hand.
 ## CI
 
 The GitHub Actions workflow `.github/workflows/check.yml` runs on pull requests
-targeting `main` and on manual dispatch. It runs `make lint` followed by
-`make build` on `ubuntu-latest` with Zsh installed.
+targeting `main` and on manual dispatch. It runs `make lint`, `make build`, then
+`make smoke` on `ubuntu-latest` with Zsh installed.
 
 The `.github/workflows/release.yml` workflow (manual `workflow_dispatch`, with a
 `patch`/`minor`/`major` input) runs the release orchestrator. It restores the
