@@ -87,3 +87,62 @@ __dotfiles_completions_lazy() {
 }
 
 complete -F __dotfiles_completions_lazy "${__dotfiles_completion_aliases[@]}"
+
+# Bespoke completion for custom function wrappers. These have no base command to
+# inherit from, so they are wired by hand and bound alongside their aliases. git
+# refs are read at completion time (only inside a repo), so there is no cost.
+
+# Bind a completer only to targets (functions or aliases) that exist. Bash has
+# no alias expansion before completion, so aliases must be bound explicitly.
+# appledouble_clean and its adc alias are Linux-only, hence the guard.
+__dotfiles_complete_bind() {
+  local fn="$1"
+  shift
+  local t
+  for t in "$@"; do
+    if declare -F "$t" > '/dev/null' 2>&1 || alias "$t" > '/dev/null' 2>&1; then
+      complete -F "$fn" "$t"
+    fi
+  done
+}
+
+# git_pull / git_push: position 1 -> remotes + branches, position 2 -> branches.
+__dotfiles_complete_git_remote_branch() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local branches
+  branches="$(command git for-each-ref --format='%(refname:short)' refs/heads 2> '/dev/null')"
+
+  if [[ "$COMP_CWORD" -eq 1 ]]; then
+    local remotes
+    remotes="$(command git remote 2> '/dev/null')"
+    # shellcheck disable=SC2207
+    COMPREPLY=($(compgen -W "$remotes $branches" -- "$cur"))
+  else
+    # shellcheck disable=SC2207
+    COMPREPLY=($(compgen -W "$branches" -- "$cur"))
+  fi
+}
+__dotfiles_complete_bind __dotfiles_complete_git_remote_branch \
+  git_pull git_push gl gp pull push
+
+# git_nuke: a single local branch to delete.
+__dotfiles_complete_git_local_branch() {
+  [[ "$COMP_CWORD" -eq 1 ]] || return 0
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local branches
+  branches="$(command git for-each-ref --format='%(refname:short)' refs/heads 2> '/dev/null')"
+  # shellcheck disable=SC2207
+  COMPREPLY=($(compgen -W "$branches" -- "$cur"))
+}
+__dotfiles_complete_bind __dotfiles_complete_git_local_branch git_nuke gn
+
+# appledouble_clean: optional dry-run flag.
+__dotfiles_complete_appledouble_clean() {
+  [[ "$COMP_CWORD" -eq 1 ]] || return 0
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  # shellcheck disable=SC2207
+  COMPREPLY=($(compgen -W '--dry-run -n' -- "$cur"))
+}
+__dotfiles_complete_bind __dotfiles_complete_appledouble_clean appledouble_clean adc
+
+unset -f __dotfiles_complete_bind
