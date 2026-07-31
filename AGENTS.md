@@ -27,6 +27,7 @@ dotfiles/
   AGENTS.md             # This file
   CHANGELOG.md          # Keep a Changelog format, updated on release
   CODEOWNERS            # Code owner (@ChristianGrete) for all paths
+  CONTRIBUTING.md       # Contributor quick-start (points to this file)
   LICENSE               # MIT license
   Makefile              # Entry point for build tooling
   README.md             # Project overview
@@ -149,15 +150,15 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 
 `rc.bash` (or `rc.zsh`) sources internal modules in deterministic order:
 
-1. `$DOTFILES/etc/bootstrap.sh` -- self-guarded DOTFILES_OS, DOTFILES_SHELL, DOTFILES_VERSION
-2. `$DOTFILES/etc/environment.sh` -- exported variables
-3. `$DOTFILES/etc/functions.sh` -- OS-aware function loader
-4. `$DOTFILES/etc/aliases.sh` -- aliases (may reference functions)
-5. `$DOTFILES/etc/completions.bash` -- lazy alias completion wiring (bash);
+1. `$DOTFILES/etc/bootstrap.sh` — self-guarded DOTFILES_OS, DOTFILES_SHELL, DOTFILES_VERSION
+2. `$DOTFILES/etc/environment.sh` — exported variables
+3. `$DOTFILES/etc/functions.sh` — OS-aware function loader
+4. `$DOTFILES/etc/aliases.sh` — aliases (may reference functions)
+5. `$DOTFILES/etc/completions.bash` — lazy alias completion wiring (bash);
    `completions.zsh` runs `compinit` on zsh
-6. `$DOTFILES/etc/prompt.bash` -- shell-specific prompt setup
-7. `$DOTFILES/etc/loaders/veracrypt.sh` -- VeraCrypt dotfile sourcing (Linux only)
-8. `fastfetch` -- system info on startup (skipped in VS Code terminal)
+6. `$DOTFILES/etc/prompt.bash` — shell-specific prompt setup
+7. `$DOTFILES/etc/loaders/veracrypt.sh` — VeraCrypt dotfile sourcing (Linux only)
+8. `fastfetch` — system info on startup (skipped in VS Code terminal)
 
 `profile.bash` (or `profile.zsh`) sources `bootstrap.sh` first, then runs
 one-time loaders (e.g., VeraCrypt). This ensures `DOTFILES_OS` is available
@@ -174,7 +175,7 @@ Loaders run last because they may depend on all preceding modules.
 ### Shell Completion
 
 Aliases do not inherit their target command's completion automatically, so the
-`completions.*` modules bridge that gap -- differently per shell:
+`completions.*` modules bridge that gap — differently per shell:
 
 - **Bash** (`completions.bash`): Bash has no alias-expansion-before-completion,
   so each wrapper must be wired explicitly. The module registers a single
@@ -194,7 +195,7 @@ Aliases do not inherit their target command's completion automatically, so the
   `appledouble_clean`) have no command to inherit from, so both modules
   hand-wire small completers: git refs (branches, plus remotes at the remote
   position) read at completion time, and the `--dry-run`/`-n` flag for
-  `appledouble_clean`. Their aliases are covered too -- bound explicitly in
+  `appledouble_clean`. Their aliases are covered too — bound explicitly in
   Bash, inherited via alias expansion in Zsh. Bindings are guarded so a
   completer is wired only to targets that actually exist: `appledouble_clean`
   (and its `adc` alias) is Linux-only, so on macOS it stays unbound while the
@@ -205,9 +206,9 @@ Aliases do not inherit their target command's completion automatically, so the
 `functions.sh` delegates to a shared loader defined in `loaders/functions.sh`.
 The loader iterates `functions.d/*.sh` and filters by `$DOTFILES_OS`:
 
-- `*_linux.sh` -- sourced only when `$DOTFILES_OS` is `linux`.
-- `*_darwin.sh` -- sourced only when `$DOTFILES_OS` is `darwin`.
-- `*.sh` (no OS suffix) -- always sourced on all platforms.
+- `*_linux.sh` — sourced only when `$DOTFILES_OS` is `linux`.
+- `*_darwin.sh` — sourced only when `$DOTFILES_OS` is `darwin`.
+- `*.sh` (no OS suffix) — always sourced on all platforms.
 
 The loader function (`__dotfiles_loader_functions`) is unset after use.
 
@@ -243,9 +244,9 @@ share their core logic via `libexec/_common` (sourced, not executed).
 `build/` and `dist/` are produced by the same core logic (`libexec/_common`)
 but differ in intent:
 
-- **`build/`** -- dev artifact. Gitignored. Version is the git short hash.
+- **`build/`** — dev artifact. Gitignored. Version is the git short hash.
   Rebuilt in place, preserves `opt/`/`var/` contents. Used by `make install`.
-- **`dist/`** -- release artifact. Gitignored on `main`, force-added only into
+- **`dist/`** — release artifact. Gitignored on `main`, force-added only into
   the tagged release commit. Version is the SemVer from the `VERSION` file.
   Always rebuilt from scratch (pristine).
 
@@ -267,7 +268,7 @@ is wrapped by a `workflow_dispatch` GitHub Action. The orchestrator:
 `libexec/release` does NOT push. The caller (the Action, or the user) pushes the
 branch and the tag afterwards. This keeps `main` source-only while the tag
 carries the full `dist/` artifact. `VERSION` starts at `0.0.0` and is bumped by
-tooling -- never edit it by hand.
+tooling — never edit it by hand.
 
 ## CI
 
@@ -278,7 +279,7 @@ targeting `main` and on manual dispatch. It runs `make lint`, `make build`, then
 The `.github/workflows/release.yml` workflow (manual `workflow_dispatch`, with a
 `patch`/`minor`/`major` input) runs the release orchestrator. It restores the
 SSH signing key from the `SIGNING_KEY` secret and pushes as a repository admin
-via the `RELEASE_TOKEN` PAT -- required because the `main` branch ruleset cannot
+via the `RELEASE_TOKEN` PAT — required because the `main` branch ruleset cannot
 grant a bypass to the default `GITHUB_TOKEN`.
 
 ## Code Conventions
@@ -286,7 +287,13 @@ grant a bypass to the default `GITHUB_TOKEN`.
 ### Language
 
 - All code, comments, commit messages, and documentation: US English.
-- Use ASCII characters only in code and code blocks.
+- Use ASCII characters only in code and code blocks, with two deliberate
+  exceptions:
+  - Markdown prose may use typographic characters — em-dashes (`—`) and the
+    copyright sign (`©`) in the README/CONTRIBUTING footer.
+  - Within `src/`, the only non-ASCII permitted is the prompt tree glyph
+    (`└──`) in `prompt.bash` / `prompt.zsh`, chosen for nicer prompt optics.
+    Everything else in `src/` stays strict ASCII.
 
 ### Shell Syntax
 
@@ -335,7 +342,7 @@ a unified `printf` convention:
   `printf '%s\n' 'func: message.'`. Reserve `%s`, `%d`, etc. for dynamic values.
 - **Prefix every message with the function name** followed by a colon and space:
   `printf 'git_pull: pulling from %s\n' "$remote"`.
-- **Lowercase after the prefix.** No `Error:` or `Warning:` labels -- the stderr
+- **Lowercase after the prefix.** No `Error:` or `Warning:` labels — the stderr
   routing and exit code convey severity.
 - **Errors go to stderr (`>&2`).** Informational/progress output goes to stdout.
 - **Indented sub-output is fine** for detail lines beneath a header message:
@@ -346,9 +353,9 @@ a unified `printf` convention:
 
 ### File Extensions
 
-- `.sh` -- shell-agnostic (bash + zsh compatible). Used in `src/shared/`.
-- `.bash` -- bash-specific. Used in `src/bash/`.
-- `.zsh` -- zsh-specific. Used in `src/zsh/`.
+- `.sh` — shell-agnostic (bash + zsh compatible). Used in `src/shared/`.
+- `.bash` — bash-specific. Used in `src/bash/`.
+- `.zsh` — zsh-specific. Used in `src/zsh/`.
 
 ### Formatting and File Modes
 
@@ -356,7 +363,7 @@ a unified `printf` convention:
   `Makefile`, which uses tabs as required by make.
 - Only the executable `libexec/` commands are `755` (`build`, `bump`,
   `changelog`, `clean`, `dist`, `install`, `release`, `stamp`). Everything else
-  -- sourced `src/` modules, `libexec/_common`, data files, and READMEs -- is
+  — sourced `src/` modules, `libexec/_common`, data files, and READMEs — is
   `644`.
 
 ### Internal Naming
