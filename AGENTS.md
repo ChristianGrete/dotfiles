@@ -194,7 +194,10 @@ Aliases do not inherit their target command's completion automatically, so the
   hand-wire small completers: git refs (branches, plus remotes at the remote
   position) read at completion time, and the `--dry-run`/`-n` flag for
   `appledouble_clean`. Their aliases are covered too -- bound explicitly in
-  Bash, inherited via alias expansion in Zsh.
+  Bash, inherited via alias expansion in Zsh. Bindings are guarded so a
+  completer is wired only to targets that actually exist: `appledouble_clean`
+  (and its `adc` alias) is Linux-only, so on macOS it stays unbound while the
+  git wrappers, present on both platforms, always wire up.
 
 ### OS-Specific Function Dispatch
 

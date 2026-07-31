@@ -92,6 +92,20 @@ complete -F __dotfiles_completions_lazy "${__dotfiles_completion_aliases[@]}"
 # inherit from, so they are wired by hand and bound alongside their aliases. git
 # refs are read at completion time (only inside a repo), so there is no cost.
 
+# Bind a completer only to targets (functions or aliases) that exist. Bash has
+# no alias expansion before completion, so aliases must be bound explicitly.
+# appledouble_clean and its adc alias are Linux-only, hence the guard.
+__dotfiles_complete_bind() {
+  local fn="$1"
+  shift
+  local t
+  for t in "$@"; do
+    if declare -F "$t" > '/dev/null' 2>&1 || alias "$t" > '/dev/null' 2>&1; then
+      complete -F "$fn" "$t"
+    fi
+  done
+}
+
 # git_pull / git_push: position 1 -> remotes + branches, position 2 -> branches.
 __dotfiles_complete_git_remote_branch() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
@@ -108,7 +122,8 @@ __dotfiles_complete_git_remote_branch() {
     COMPREPLY=($(compgen -W "$branches" -- "$cur"))
   fi
 }
-complete -F __dotfiles_complete_git_remote_branch git_pull git_push gl gp pull push
+__dotfiles_complete_bind __dotfiles_complete_git_remote_branch \
+  git_pull git_push gl gp pull push
 
 # git_nuke: a single local branch to delete.
 __dotfiles_complete_git_local_branch() {
@@ -119,7 +134,7 @@ __dotfiles_complete_git_local_branch() {
   # shellcheck disable=SC2207
   COMPREPLY=($(compgen -W "$branches" -- "$cur"))
 }
-complete -F __dotfiles_complete_git_local_branch git_nuke gn
+__dotfiles_complete_bind __dotfiles_complete_git_local_branch git_nuke gn
 
 # appledouble_clean: optional dry-run flag.
 __dotfiles_complete_appledouble_clean() {
@@ -128,4 +143,6 @@ __dotfiles_complete_appledouble_clean() {
   # shellcheck disable=SC2207
   COMPREPLY=($(compgen -W '--dry-run -n' -- "$cur"))
 }
-complete -F __dotfiles_complete_appledouble_clean appledouble_clean adc
+__dotfiles_complete_bind __dotfiles_complete_appledouble_clean appledouble_clean adc
+
+unset -f __dotfiles_complete_bind

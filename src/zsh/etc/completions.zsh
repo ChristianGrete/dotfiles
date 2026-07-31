@@ -43,6 +43,18 @@ __dotfiles_complete_appledouble_clean() {
   _values 'flag' '--dry-run' '-n'
 }
 
-compdef __dotfiles_complete_git_remote_branch git_pull git_push
-compdef __dotfiles_complete_git_local_branch git_nuke
-compdef __dotfiles_complete_appledouble_clean appledouble_clean
+# Bind a completer only to wrapper functions that exist (appledouble_clean is
+# Linux-only). Aliases inherit via expansion, so functions are enough.
+__dotfiles_compdef_if() {
+  local fn="$1"; shift
+  local t
+  for t in "$@"; do
+    (( $+functions[$t] )) && compdef "$fn" "$t"
+  done
+}
+
+__dotfiles_compdef_if __dotfiles_complete_git_remote_branch git_pull git_push
+__dotfiles_compdef_if __dotfiles_complete_git_local_branch git_nuke
+__dotfiles_compdef_if __dotfiles_complete_appledouble_clean appledouble_clean
+
+unset -f __dotfiles_compdef_if
