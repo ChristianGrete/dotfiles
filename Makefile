@@ -1,4 +1,4 @@
-.PHONY: build bump changelog clean dist install lint release
+.PHONY: build bump changelog clean dist install lint release smoke
 
 build:
 	@libexec/build
@@ -30,3 +30,6 @@ lint:
 
 release:
 	@libexec/release $(LEVEL)
+
+smoke:
+	@libexec/smoke
