@@ -7,7 +7,7 @@ buffer_backup() {
   local -r temp_file="${dest_dir}/.buffer_${today}.partial.$$"
 
   local -a backups=()
-  local path name oldest
+  local entry name oldest
   local source_hash dest_hash
 
   if [[ ! -f "$source_file" ]]; then
@@ -30,19 +30,19 @@ buffer_backup() {
     return 1
   fi
 
-  for path in "${dest_dir}"/.buffer_????-??-??; do
-    [[ -e "$path" ]] || continue
-    name="${path##*/}"
+  for entry in "${dest_dir}"/.buffer_????-??-??; do
+    [[ -e "$entry" ]] || continue
+    name="${entry##*/}"
     [[ "$name" =~ ^\.buffer_[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || continue
-    backups+=("$path")
+    backups+=("$entry")
   done
 
   printf 'buffer_backup: existing backups in %s:\n' "$dest_dir"
   if ((${#backups[@]} == 0)); then
     printf '  (none)\n'
   else
-    for path in "${backups[@]}"; do
-      stat -c '  %n | %y | %s bytes | %U:%G | %a' -- "$path"
+    for entry in "${backups[@]}"; do
+      stat -c '  %n | %y | %s bytes | %U:%G | %a' -- "$entry"
     done
   fi
 

@@ -3,19 +3,19 @@
 
 __dotfiles_loader_veracrypt() {
   local target="$1"
-  local dir path answer
+  local dir file answer
 
   while IFS= read -r dir; do
-    path="${dir}/${target}"
-    [[ -r "$path" ]] || continue
+    file="${dir}/${target}"
+    [[ -r "$file" ]] || continue
 
-    printf 'veracrypt: source %s? [y/N] ' "$path"
+    printf 'veracrypt: source %s? [y/N] ' "$file"
     read -r answer < '/dev/tty'
     printf '\n'
     [[ "$answer" == [yY] ]] || continue
 
     export __DOTFILES_LOADER_VERACRYPT_PATH="$dir"
-    . "$path"
+    . "$file"
     unset __DOTFILES_LOADER_VERACRYPT_PATH
   done < <(find '/media' -maxdepth 1 -name 'veracrypt*' -type d 2> '/dev/null' | command sort)
 }

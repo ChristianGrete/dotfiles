@@ -305,6 +305,10 @@ grant a bypass to the default `GITHUB_TOKEN`.
   and Zsh. This is a wide intersection: `local`, `[[ ]]`, `case`, `for`, `if`,
   `printf`, `command`, parameter expansion, and most builtins are shared. When in
   doubt, test in both shells.
+- In `src/shared/`, never use a Zsh special parameter name as a local variable.
+  Most importantly `path` (tied to `PATH`) — `local path` empties `PATH` inside
+  the function on Zsh — and likewise `fpath`, `cdpath`, `manpath`, `status`.
+  Pick another name (e.g., `file`).
 - Files in `src/bash/` may use Bash-only features (`BASH_SOURCE`, `PROMPT_COMMAND`,
   `shopt`, `complete`, etc.).
 - Files in `src/zsh/` may use Zsh-only features (`precmd`, `setopt`,
