@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-07-31
+
+- chore(*): add smoke test, contrib guide + markdown typo polish (#7) (9c695be)
+- feat: completions 4 custom func wrappers (#6) (514dbf3)
+- feat: inherit completion 4 aliases + cleanup (#5) (7bdf147)
+
 ## [0.0.1] - 2026-07-23
 
 - chore(*): scope commit/tag msg, fix changelog (#4) (4d4a316)
