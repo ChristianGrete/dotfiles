@@ -1,6 +1,6 @@
 buffer_backup() {
-  local -r source_dir="/run/media/chris/Buffer"
-  local -r dest_dir="/run/media/chris/Buffers"
+  local -r source_dir="/run/media/$USER/Buffer"
+  local -r dest_dir="/run/media/$USER/Buffers"
   local -r source_file="${source_dir}/.buffer"
   local -r today="$(date +%F)"
   local -r dest_file="${dest_dir}/.buffer_${today}"
@@ -30,12 +30,12 @@ buffer_backup() {
     return 1
   fi
 
-  for entry in "${dest_dir}"/.buffer_????-??-??; do
-    [[ -e "$entry" ]] || continue
+  # find instead of a glob: an empty match aborts under zsh (NOMATCH).
+  while IFS= read -r entry; do
     name="${entry##*/}"
     [[ "$name" =~ ^\.buffer_[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || continue
     backups+=("$entry")
-  done
+  done < <(command find "$dest_dir" -maxdepth 1 -type f -name '.buffer_????-??-??' | command sort)
 
   printf 'buffer_backup: existing backups in %s:\n' "$dest_dir"
   if ((${#backups[@]} == 0)); then
@@ -50,7 +50,8 @@ buffer_backup() {
     0|1|2)
       ;;
     3)
-      oldest="${backups[0]}"
+      # Offset syntax is 0-based in both shells, unlike zsh subscripts.
+      oldest="${backups[*]:0:1}"
       printf 'buffer_backup: deleting oldest backup: %s\n' "$oldest"
       rm -- "$oldest" || return 1
       ;;
