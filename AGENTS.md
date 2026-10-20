@@ -60,8 +60,8 @@ dotfiles/
         functions.d/    # Individual function modules
           appledouble_linux.sh    # Loaded only on Linux
           brew_darwin.sh          # Loaded only on macOS (Darwin)
-          buffer_linux.sh         # Loaded only on Linux
-          internals.sh            # Always loaded
+          buffer_linux.sh         # Loaded only on Linux (verified .buffer backups)
+          internals.sh            # Always loaded (__dotfiles_* helpers)
           visual.sh               # Always loaded
           git.sh                  # Always loaded
           keyfiles_linux.sh       # Loaded only on Linux
@@ -192,14 +192,16 @@ Aliases do not inherit their target command's completion automatically, so the
   database at `$DOTFILES/var/cache/zcompdump` (regenerable runtime state, hence
   `var/cache/`).
 - **Custom function wrappers** (`git_pull`/`git_push`/`git_nuke`,
-  `appledouble_clean`) have no command to inherit from, so both modules
-  hand-wire small completers: git refs (branches, plus remotes at the remote
-  position) read at completion time, and the `--dry-run`/`-n` flag for
-  `appledouble_clean`. Their aliases are covered too — bound explicitly in
+  `appledouble_clean`, `buffer_backup`) have no command to inherit from, so
+  both modules hand-wire small completers: git refs (branches, plus remotes at
+  the remote position) read at completion time, the `--dry-run`/`-n` flag for
+  `appledouble_clean`, and the source/destination volumes for `buffer_backup`.
+  Their aliases are covered too — bound explicitly in
   Bash, inherited via alias expansion in Zsh. Bindings are guarded so a
   completer is wired only to targets that actually exist: `appledouble_clean`
-  (and its `adc` alias) is Linux-only, so on macOS it stays unbound while the
-  git wrappers, present on both platforms, always wire up.
+  and `buffer_backup` (and their `adc`/`bb` aliases) are Linux-only, so on
+  macOS they stay unbound while the git wrappers, present on both platforms,
+  always wire up.
 
 ### OS-Specific Function Dispatch
 
@@ -215,6 +217,19 @@ The loader function (`__dotfiles_loader_functions`) is unset after use.
 OS-specific files provide the same function API as their counterpart on the other
 OS. For example, both `keyfiles_linux.sh` and `keyfiles_darwin.sh` define
 `keyfiles_mount()` and `keyfiles_unmount()`.
+
+The OS suffix restricts the platform, not the shell: `*_linux.sh` modules must
+still work in both Bash and Zsh.
+
+Each module is a scope: it defines only public functions named
+`<scope>_<action>[_<object>]` — scope is a noun, action a verb, and an object
+may follow when the verb alone is unclear (e.g., `buffer_backup`,
+`buffer_compute_hash`, `keyfiles_mount`). Names must make scope and action
+immediately clear; common short forms are fine (e.g., `calc`), cryptic ones
+are not. Every function in a module ends up
+in the user's shell. Internal helpers live in `internals.sh` under the
+`__dotfiles_` prefix and follow the same scheme (e.g.,
+`__dotfiles_loop_find_attached`), even when only one OS uses them.
 
 ## Build and Test Commands
 

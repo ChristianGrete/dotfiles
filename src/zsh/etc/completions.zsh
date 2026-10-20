@@ -43,6 +43,23 @@ __dotfiles_complete_appledouble_clean() {
   _values 'flag' '--dry-run' '-n'
 }
 
+# buffer_backup: a source, then the destinations reachable from it.
+__dotfiles_complete_buffer_backup() {
+  local -a targets
+
+  case "$CURRENT" in
+    2) targets=('offload' 'buffer') ;;
+    3)
+      case "${words[2]}" in
+        offload) targets=('buffer' 'buffers') ;;
+        buffer) targets=('buffers') ;;
+      esac
+      ;;
+  esac
+
+  (( ${#targets} )) && _describe -t volumes 'volume' targets
+}
+
 # Bind a completer only to wrapper functions that exist (appledouble_clean is
 # Linux-only). Aliases inherit via expansion, so functions are enough.
 __dotfiles_compdef_if() {
@@ -56,5 +73,6 @@ __dotfiles_compdef_if() {
 __dotfiles_compdef_if __dotfiles_complete_git_remote_branch git_pull git_push
 __dotfiles_compdef_if __dotfiles_complete_git_local_branch git_nuke
 __dotfiles_compdef_if __dotfiles_complete_appledouble_clean appledouble_clean
+__dotfiles_compdef_if __dotfiles_complete_buffer_backup buffer_backup
 
 unset -f __dotfiles_compdef_if

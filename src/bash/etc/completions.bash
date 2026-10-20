@@ -145,4 +145,24 @@ __dotfiles_complete_appledouble_clean() {
 }
 __dotfiles_complete_bind __dotfiles_complete_appledouble_clean appledouble_clean adc
 
+# buffer_backup: a source, then the destinations reachable from it.
+__dotfiles_complete_buffer_backup() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local words=''
+
+  case "$COMP_CWORD" in
+    1) words='offload buffer' ;;
+    2)
+      case "${COMP_WORDS[1]}" in
+        offload) words='buffer buffers' ;;
+        buffer) words='buffers' ;;
+      esac
+      ;;
+  esac
+
+  # shellcheck disable=SC2207
+  COMPREPLY=($(compgen -W "$words" -- "$cur"))
+}
+__dotfiles_complete_bind __dotfiles_complete_buffer_backup buffer_backup bb
+
 unset -f __dotfiles_complete_bind
