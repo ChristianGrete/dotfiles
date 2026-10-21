@@ -233,3 +233,103 @@ buffer_backup() {
   command stat -c '  %n | %y | %s bytes | %U:%G | %a' -- "$dest_file"
   printf 'buffer_backup: hash ok: %s\n' "$dest_hash"
 }
+
+# Verify copies against their sidecars. Reads via buffer_compute_hash instead
+# of sha256sum -c, which would be served from the page cache.
+buffer_verify() {
+  local -r media="/run/media/$USER"
+  local -r date_regex='^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+
+  local dir pattern regex entry name hash_file line expected actual attached
+  local checked=0 failed=0
+  local -a backups=()
+
+  case "${1:-}" in
+    'buffer')
+      dir="$media/Buffer"
+      pattern='.buffer'
+      regex='^\.buffer$'
+      ;;
+    'buffers')
+      dir="$media/Buffers"
+      pattern='.buffer_????-??-??'
+      regex='^\.buffer_[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+      ;;
+  esac
+
+  if [[ -z "$dir" || $# -gt 2 || ( -n "${2:-}" && ( "$1" != 'buffers' || ! "$2" =~ $date_regex ) ) ]]; then
+    printf 'buffer_verify: invalid arguments.\n' >&2
+    printf '  usage: buffer_verify buffer\n' >&2
+    printf '         buffer_verify buffers [YYYY-MM-DD]\n' >&2
+    return 1
+  fi
+
+  [[ -n "${2:-}" ]] && pattern=".buffer_$2"
+
+  if ! command mountpoint -q "$dir" 2> '/dev/null'; then
+    printf 'buffer_verify: volume not mounted: %s\n' "$dir" >&2
+    return 1
+  fi
+
+  # find instead of a glob: an empty match aborts under zsh (NOMATCH).
+  while IFS= read -r entry; do
+    name="${entry##*/}"
+    [[ "$name" =~ $regex ]] || continue
+    backups+=("$entry")
+  done < <(command find "$dir" -maxdepth 1 -type f -name "$pattern" | command sort)
+
+  if ((${#backups[@]} == 0)); then
+    printf 'buffer_verify: no copies found: %s/%s\n' "$dir" "$pattern" >&2
+    return 1
+  fi
+
+  for entry in "${backups[@]}"; do
+    name="${entry##*/}"
+    hash_file="$dir/.hash${name#.buffer}"
+    checked=$((checked + 1))
+
+    printf 'buffer_verify: verifying %s\n' "$entry"
+
+    if [[ ! -f "$hash_file" ]]; then
+      printf 'buffer_verify: hash file not found: %s\n' "$hash_file" >&2
+      failed=$((failed + 1))
+      continue
+    fi
+
+    line=''
+    IFS= read -r line < "$hash_file"
+    expected="${line%%  *}"
+
+    # Also catches a sidecar that belongs to another copy.
+    if [[ ! "$expected" =~ ^[0-9a-f]{64}$ || "$line" != "$expected  $name" ]]; then
+      printf 'buffer_verify: invalid hash file: %s\n' "$hash_file" >&2
+      failed=$((failed + 1))
+      continue
+    fi
+
+    # A mounted container may change while being read.
+    if attached="$(__dotfiles_loop_find_attached "$entry")"; then
+      printf 'buffer_verify: file in use by a loop device (mounted?): %s\n' "$attached" >&2
+      failed=$((failed + 1))
+      continue
+    fi
+
+    if ! actual="$(buffer_compute_hash "$entry")"; then
+      failed=$((failed + 1))
+      continue
+    fi
+
+    if [[ "$actual" != "$expected" ]]; then
+      printf 'buffer_verify: hash mismatch: %s\n' "$entry" >&2
+      printf '  expected: %s\n' "$expected" >&2
+      printf '  actual:   %s\n' "$actual" >&2
+      failed=$((failed + 1))
+      continue
+    fi
+
+    printf 'buffer_verify: hash ok: %s\n' "$actual"
+  done
+
+  printf 'buffer_verify: %d checked, %d failed.\n' "$checked" "$failed"
+  ((failed == 0))
+}

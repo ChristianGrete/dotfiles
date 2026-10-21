@@ -165,4 +165,25 @@ __dotfiles_complete_buffer_backup() {
 }
 __dotfiles_complete_bind __dotfiles_complete_buffer_backup buffer_backup bb
 
+# buffer_verify: a volume, then the dates of existing copies on Buffers.
+__dotfiles_complete_buffer_verify() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local words=''
+
+  case "$COMP_CWORD" in
+    1) words='buffer buffers' ;;
+    2)
+      if [[ "${COMP_WORDS[1]}" == 'buffers' ]]; then
+        words="$(command find "/run/media/$USER/Buffers" -maxdepth 1 -type f \
+          -name '.buffer_????-??-??' -printf '%f\n' 2> '/dev/null')"
+        words="${words//.buffer_/}"
+      fi
+      ;;
+  esac
+
+  # shellcheck disable=SC2207
+  COMPREPLY=($(compgen -W "$words" -- "$cur"))
+}
+__dotfiles_complete_bind __dotfiles_complete_buffer_verify buffer_verify bv
+
 unset -f __dotfiles_complete_bind

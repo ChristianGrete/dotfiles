@@ -15,6 +15,10 @@ if command -v 'buffer_compute_hash' > '/dev/null' 2>&1; then
   alias bch='buffer_compute_hash'
 fi
 
+if command -v 'buffer_verify' > '/dev/null' 2>&1; then
+  alias bv='buffer_verify'
+fi
+
 if command -v 'clear' > '/dev/null' 2>&1; then
   alias c='clear && unset __dotfiles_prompt_sep'
 else

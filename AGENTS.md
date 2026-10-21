@@ -192,14 +192,16 @@ Aliases do not inherit their target command's completion automatically, so the
   database at `$DOTFILES/var/cache/zcompdump` (regenerable runtime state, hence
   `var/cache/`).
 - **Custom function wrappers** (`git_pull`/`git_push`/`git_nuke`,
-  `appledouble_clean`, `buffer_backup`) have no command to inherit from, so
-  both modules hand-wire small completers: git refs (branches, plus remotes at
-  the remote position) read at completion time, the `--dry-run`/`-n` flag for
-  `appledouble_clean`, and the source/destination volumes for `buffer_backup`.
-  Their aliases are covered too — bound explicitly in
+  `appledouble_clean`, `buffer_backup`, `buffer_verify`) have no command to
+  inherit from, so both modules hand-wire small completers: git refs (branches,
+  plus remotes at the remote position) read at completion time, the
+  `--dry-run`/`-n` flag for `appledouble_clean`, the source/destination volumes
+  for `buffer_backup`, and the volume plus existing copy dates for
+  `buffer_verify`. Their aliases are covered too — bound explicitly in
   Bash, inherited via alias expansion in Zsh. Bindings are guarded so a
-  completer is wired only to targets that actually exist: `appledouble_clean`
-  and `buffer_backup` (and their `adc`/`bb` aliases) are Linux-only, so on
+  completer is wired only to targets that actually exist: `appledouble_clean`,
+  `buffer_backup`, and `buffer_verify` (and their `adc`/`bb`/`bv` aliases) are
+  Linux-only, so on
   macOS they stay unbound while the git wrappers, present on both platforms,
   always wire up.
 
