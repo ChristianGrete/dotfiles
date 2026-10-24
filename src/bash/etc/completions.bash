@@ -145,7 +145,7 @@ __dotfiles_complete_appledouble_clean() {
 }
 __dotfiles_complete_bind __dotfiles_complete_appledouble_clean appledouble_clean adc
 
-# buffer_backup: a source, then the destinations reachable from it.
+# buffer_backup: a source, then the valid destinations.
 __dotfiles_complete_buffer_backup() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
   local words=''
@@ -165,7 +165,7 @@ __dotfiles_complete_buffer_backup() {
 }
 __dotfiles_complete_bind __dotfiles_complete_buffer_backup buffer_backup bb
 
-# buffer_verify: a volume, then the dates of existing copies on Buffers.
+# buffer_verify: a target, then the dates of existing buffer files.
 __dotfiles_complete_buffer_verify() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
   local words=''

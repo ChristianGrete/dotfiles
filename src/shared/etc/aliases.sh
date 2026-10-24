@@ -11,10 +11,6 @@ if command -v 'buffer_backup' > '/dev/null' 2>&1; then
   alias bb='buffer_backup'
 fi
 
-if command -v 'buffer_compute_hash' > '/dev/null' 2>&1; then
-  alias bch='buffer_compute_hash'
-fi
-
 if command -v 'buffer_verify' > '/dev/null' 2>&1; then
   alias bv='buffer_verify'
 fi
@@ -55,6 +51,8 @@ alias gp='git_push'
 alias gsh='git show'
 alias gsha='git_hash'
 alias gst='git status'
+alias hc='hash_compute'
+alias hv='hash_verify'
 alias km='keyfiles_mount'
 alias ku='keyfiles_unmount'
 alias ll='ls -Fal'

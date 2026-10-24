@@ -43,7 +43,7 @@ __dotfiles_complete_appledouble_clean() {
   _values 'flag' '--dry-run' '-n'
 }
 
-# buffer_backup: a source, then the destinations reachable from it.
+# buffer_backup: a source, then the valid destinations.
 __dotfiles_complete_buffer_backup() {
   local -a targets
 
@@ -60,7 +60,7 @@ __dotfiles_complete_buffer_backup() {
   (( ${#targets} )) && _describe -t volumes 'volume' targets
 }
 
-# buffer_verify: a volume, then the dates of existing copies on Buffers.
+# buffer_verify: a target, then the dates of existing buffer files.
 __dotfiles_complete_buffer_verify() {
   local -a targets
 

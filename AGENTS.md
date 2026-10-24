@@ -60,10 +60,13 @@ dotfiles/
         functions.d/    # Individual function modules
           appledouble_linux.sh    # Loaded only on Linux
           brew_darwin.sh          # Loaded only on macOS (Darwin)
-          buffer_linux.sh         # Loaded only on Linux (verified .buffer backups)
+          buffer_linux.sh         # Loaded only on Linux
           internals.sh            # Always loaded (__dotfiles_* helpers)
           visual.sh               # Always loaded
           git.sh                  # Always loaded
+          hash.sh                 # Always loaded
+          hash_linux.sh           # Loaded only on Linux
+          hash_darwin.sh          # Loaded only on macOS (Darwin)
           keyfiles_linux.sh       # Loaded only on Linux
           keyfiles_darwin.sh      # Loaded only on macOS (Darwin)
           utils.sh                # Always loaded
@@ -192,18 +195,15 @@ Aliases do not inherit their target command's completion automatically, so the
   database at `$DOTFILES/var/cache/zcompdump` (regenerable runtime state, hence
   `var/cache/`).
 - **Custom function wrappers** (`git_pull`/`git_push`/`git_nuke`,
-  `appledouble_clean`, `buffer_backup`, `buffer_verify`) have no command to
-  inherit from, so both modules hand-wire small completers: git refs (branches,
-  plus remotes at the remote position) read at completion time, the
-  `--dry-run`/`-n` flag for `appledouble_clean`, the source/destination volumes
-  for `buffer_backup`, and the volume plus existing copy dates for
-  `buffer_verify`. Their aliases are covered too — bound explicitly in
+  `appledouble_clean`, `buffer_*`) have no command to inherit from, so both
+  modules hand-wire small completers: git refs (branches, plus remotes at the
+  remote position) read at completion time, the `--dry-run`/`-n` flag for
+  `appledouble_clean`, and fixed arguments plus existing buffer files for the
+  `buffer_*` functions. Their aliases are covered too — bound explicitly in
   Bash, inherited via alias expansion in Zsh. Bindings are guarded so a
-  completer is wired only to targets that actually exist: `appledouble_clean`,
-  `buffer_backup`, and `buffer_verify` (and their `adc`/`bb`/`bv` aliases) are
-  Linux-only, so on
-  macOS they stay unbound while the git wrappers, present on both platforms,
-  always wire up.
+  completer is wired only to targets that actually exist: Linux-only wrappers
+  (and their aliases) stay unbound on macOS while the git wrappers, present on
+  both platforms, always wire up.
 
 ### OS-Specific Function Dispatch
 
@@ -217,16 +217,18 @@ The loader iterates `functions.d/*.sh` and filters by `$DOTFILES_OS`:
 The loader function (`__dotfiles_loader_functions`) is unset after use.
 
 OS-specific files provide the same function API as their counterpart on the other
-OS. For example, both `keyfiles_linux.sh` and `keyfiles_darwin.sh` define
-`keyfiles_mount()` and `keyfiles_unmount()`.
+OS: `<scope>_linux.sh` and `<scope>_darwin.sh` define the same `<scope>_*`
+functions. A scope may also combine a shared `<scope>.sh` with OS-specific
+files: `hash.sh` defines `hash_verify` on top of `hash_compute` from
+`hash_linux.sh` / `hash_darwin.sh`.
 
 The OS suffix restricts the platform, not the shell: `*_linux.sh` modules must
 still work in both Bash and Zsh.
 
 Each module is a scope: it defines only public functions named
 `<scope>_<action>[_<object>]` — scope is a noun, action a verb, and an object
-may follow when the verb alone is unclear (e.g., `buffer_backup`,
-`buffer_compute_hash`, `keyfiles_mount`). Names must make scope and action
+may follow when the verb alone is unclear (e.g., `git_pull`,
+`appledouble_clean`). Names must make scope and action
 immediately clear; common short forms are fine (e.g., `calc`), cryptic ones
 are not. Every function in a module ends up
 in the user's shell. Internal helpers live in `internals.sh` under the

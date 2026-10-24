@@ -1,39 +1,3 @@
-# Back up the .buffer container from internal to external storage:
-#   Offload (internal NVMe) -> Buffer (external NVMe, single copy)
-#   Offload or Buffer -> Buffers (external HDD, up to three dated copies)
-# Every copy is verified with SHA-256 read back via direct I/O and gets a
-# sha256sum-compatible sidecar (.hash or .hash_YYYY-MM-DD) for later checks.
-
-# Print the SHA-256 of a file, read via O_DIRECT so the page cache cannot serve
-# stale data instead of what the medium actually returns.
-buffer_compute_hash() (
-  set -o pipefail
-
-  local file="$1"
-  local hash
-
-  if [[ -z "$file" ]]; then
-    printf 'buffer_compute_hash: no file given.\n' >&2
-    return 1
-  fi
-
-  if [[ ! -f "$file" ]]; then
-    printf 'buffer_compute_hash: file not found: %s\n' "$file" >&2
-    return 1
-  fi
-
-  hash="$(command dd if="$file" bs=16M iflag=direct status=progress | command sha256sum)" || return $?
-  hash="${hash%% *}"
-
-  # Never let a failed read pass as the hash of an empty stream.
-  if [[ ! "$hash" =~ ^[0-9a-f]{64}$ ]]; then
-    printf 'buffer_compute_hash: invalid hash for %s\n' "$file" >&2
-    return 1
-  fi
-
-  printf '%s' "$hash"
-)
-
 buffer_backup() {
   local -r media="/run/media/$USER"
   local -r today="$(command date +%F)"
@@ -100,7 +64,7 @@ buffer_backup() {
     return 1
   fi
 
-  # Leftovers of interrupted runs occupy terabytes and are never cleaned up implicitly.
+  # Leftovers of interrupted runs are never cleaned up implicitly.
   while IFS= read -r entry; do
     partials+=("$entry")
   done < <(command find "$dest_dir" -maxdepth 1 -name '.buffer*.partial.*')
@@ -143,7 +107,6 @@ buffer_backup() {
     victim_size="$(command stat -c '%s' -- "$victim")" || return $?
   fi
 
-  # A mounted VeraCrypt container is attached to a loop device.
   if attached="$(__dotfiles_loop_find_attached "$source_file" "$victim")"; then
     printf 'buffer_backup: file in use by a loop device (mounted?): %s\n' "$attached" >&2
     return 1
@@ -168,7 +131,7 @@ buffer_backup() {
 
   # Prove the source is fully readable before anything gets deleted.
   printf 'buffer_backup: computing source hash...\n'
-  source_hash="$(buffer_compute_hash "$source_file")" || return $?
+  source_hash="$(hash_compute "$source_file")" || return $?
   printf 'buffer_backup: source hash: %s\n' "$source_hash"
 
   if attached="$(__dotfiles_loop_find_attached "$source_file" "$victim")"; then
@@ -190,8 +153,7 @@ buffer_backup() {
     return $rc
   }
 
-  # Mirror the source 1:1. Never rely on mtime to detect changes, though:
-  # VeraCrypt preserves a container's mtime by default.
+  # Mirror mode and mtime, but never rely on mtime to detect changes.
   { command chmod --reference="$source_file" -- "$temp_file" &&
     command touch -r "$source_file" -- "$temp_file"; } || {
     rc=$?
@@ -206,7 +168,7 @@ buffer_backup() {
   fi
 
   printf 'buffer_backup: computing destination hash (read-back)...\n'
-  dest_hash="$(buffer_compute_hash "$temp_file")" || {
+  dest_hash="$(hash_compute "$temp_file")" || {
     rc=$?
     command rm -f -- "$temp_file"
     return $rc
@@ -234,13 +196,11 @@ buffer_backup() {
   printf 'buffer_backup: hash ok: %s\n' "$dest_hash"
 }
 
-# Verify copies against their sidecars. Reads via buffer_compute_hash instead
-# of sha256sum -c, which would be served from the page cache.
 buffer_verify() {
   local -r media="/run/media/$USER"
   local -r date_regex='^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
 
-  local dir pattern regex entry name hash_file line expected actual attached
+  local dir pattern regex entry name attached
   local checked=0 failed=0
   local -a backups=()
 
@@ -285,49 +245,18 @@ buffer_verify() {
 
   for entry in "${backups[@]}"; do
     name="${entry##*/}"
-    hash_file="$dir/.hash${name#.buffer}"
     checked=$((checked + 1))
 
     printf 'buffer_verify: verifying %s\n' "$entry"
 
-    if [[ ! -f "$hash_file" ]]; then
-      printf 'buffer_verify: hash file not found: %s\n' "$hash_file" >&2
-      failed=$((failed + 1))
-      continue
-    fi
-
-    line=''
-    IFS= read -r line < "$hash_file"
-    expected="${line%%  *}"
-
-    # Also catches a sidecar that belongs to another copy.
-    if [[ ! "$expected" =~ ^[0-9a-f]{64}$ || "$line" != "$expected  $name" ]]; then
-      printf 'buffer_verify: invalid hash file: %s\n' "$hash_file" >&2
-      failed=$((failed + 1))
-      continue
-    fi
-
-    # A mounted container may change while being read.
+    # A file backing a loop device may change while being read.
     if attached="$(__dotfiles_loop_find_attached "$entry")"; then
       printf 'buffer_verify: file in use by a loop device (mounted?): %s\n' "$attached" >&2
       failed=$((failed + 1))
       continue
     fi
 
-    if ! actual="$(buffer_compute_hash "$entry")"; then
-      failed=$((failed + 1))
-      continue
-    fi
-
-    if [[ "$actual" != "$expected" ]]; then
-      printf 'buffer_verify: hash mismatch: %s\n' "$entry" >&2
-      printf '  expected: %s\n' "$expected" >&2
-      printf '  actual:   %s\n' "$actual" >&2
-      failed=$((failed + 1))
-      continue
-    fi
-
-    printf 'buffer_verify: hash ok: %s\n' "$actual"
+    hash_verify "$entry" "$dir/.hash${name#.buffer}" || failed=$((failed + 1))
   done
 
   printf 'buffer_verify: %d checked, %d failed.\n' "$checked" "$failed"

@@ -35,8 +35,8 @@ __dotfiles_prompt_git() {
   printf '%s\t%s\n' "$state" "$branch"
 }
 
-# Print the first given file that backs a loop device (Linux only, used by
-# buffer_backup). Empty arguments are skipped. Returns 1 if none is attached.
+# Print the first given file that backs a loop device (Linux only).
+# Empty arguments are skipped. Returns 1 if none is attached.
 __dotfiles_loop_find_attached() {
   local file
 
