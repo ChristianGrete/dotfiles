@@ -180,6 +180,15 @@ before `bootstrap.sh` since it has no dependencies.
 This order matters: aliases reference functions, so functions must load first.
 Loaders run last because they may depend on all preceding modules.
 
+**VeraCrypt volume dotfiles.** A volume mounted at `/media/veracrypt*` may
+provide a dotfile at its root, which the loader offers to source after a
+`[y/N]` prompt. `$__DOTFILES_LOADER_VERACRYPT_PATH` holds the mount point during
+that call only. The file is sourced inside a function and thus runs in its local
+scope: `declare`, `typeset`, and `local` create loader-local variables. Use
+`typeset -g` for anything that must persist. Loader locals are `__dotfiles_`
+prefixed, and EXIT traps fire on shell exit in both shells (the loader enables
+`posix_traps` on Zsh while sourcing).
+
 ### Shell Completion
 
 Aliases do not inherit their target command's completion automatically, so the
