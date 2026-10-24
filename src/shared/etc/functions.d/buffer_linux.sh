@@ -128,6 +128,13 @@ buffer_backup() {
 
   printf 'buffer_backup: backup created successfully.\n'
   command stat -c '  %n | %y | %s bytes | %U:%G | %a' -- "$dest_file"
+
+  printf 'buffer_backup: for a cold read, remount the volume and run:\n'
+  if [[ "$2" == 'buffers' ]]; then
+    printf '  buffer_verify buffers %s\n' "$today"
+  else
+    printf '  buffer_verify buffer\n'
+  fi
 }
 
 buffer_verify() {
@@ -301,4 +308,8 @@ buffer_restore() {
 
   printf 'buffer_restore: restored successfully.\n'
   command stat -c '  %n | %y | %s bytes | %U:%G | %a' -- "$dest_file"
+
+  printf 'buffer_restore: for a cold read, remount the volume and compare:\n'
+  printf '  hash_compute %s\n' "$dest_file"
+  printf '  expected: %s\n' "$expected"
 }
