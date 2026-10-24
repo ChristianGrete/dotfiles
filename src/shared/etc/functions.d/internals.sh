@@ -35,19 +35,26 @@ __dotfiles_prompt_git() {
   printf '%s\t%s\n' "$state" "$branch"
 }
 
-# Print the first given file that backs a loop device (Linux only).
-# Empty arguments are skipped. Returns 1 if none is attached.
-__dotfiles_loop_find_attached() {
-  local file
+# Print the hash listed for a file name in a sha256sum-style hash file. Entries
+# read "<hash>  <name>" (text mode) or "<hash> *<name>" (binary mode).
+# Returns 1 if there is no entry.
+__dotfiles_hash_lookup() {
+  local name="$1"
+  local hash_file="$2"
+  local line hash
 
-  for file in "$@"; do
-    [[ -n "$file" ]] || continue
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    hash="${line:0:64}"
+    [[ "$hash" =~ ^[0-9a-f]{64}$ ]] || continue
 
-    if [[ -n "$(command losetup -j "$file" 2> '/dev/null')" ]]; then
-      printf '%s' "$file"
-      return 0
-    fi
-  done
+    case "${line:64}" in
+      "  $name" | " *$name")
+        printf '%s' "$hash"
+        return 0
+        ;;
+    esac
+  done < "$hash_file"
 
   return 1
 }

@@ -2,11 +2,11 @@ buffer_backup() {
   local -r media="/run/media/$USER"
   local -r today="$(command date +%F)"
 
-  local source_dir dest_dir source_file dest_file hash_file temp_file
+  local source_dir dest_dir source_file dest_file hash_file
   local pattern regex limit victim victim_hash attached
   local source_size dest_avail victim_size=0
-  local source_hash dest_hash entry name rc
-  local -a backups=() partials=()
+  local source_hash entry name
+  local -a backups=()
 
   case "${1:-}:${2:-}" in
     'offload:buffer')
@@ -45,14 +45,7 @@ buffer_backup() {
     limit=1
   fi
 
-  temp_file="$dest_file.partial.$$"
-
-  for entry in "$source_dir" "$dest_dir"; do
-    if ! command mountpoint -q "$entry" 2> '/dev/null'; then
-      printf 'buffer_backup: volume not mounted: %s\n' "$entry" >&2
-      return 1
-    fi
-  done
+  volume_check "$source_dir" "$dest_dir" || return $?
 
   if [[ ! -f "$source_file" ]]; then
     printf 'buffer_backup: source file not found: %s\n' "$source_file" >&2
@@ -64,18 +57,7 @@ buffer_backup() {
     return 1
   fi
 
-  # Leftovers of interrupted runs are never cleaned up implicitly.
-  while IFS= read -r entry; do
-    partials+=("$entry")
-  done < <(command find "$dest_dir" -maxdepth 1 -name '.buffer*.partial.*')
-
-  if ((${#partials[@]} > 0)); then
-    printf 'buffer_backup: incomplete copies found, remove them first:\n' >&2
-    for entry in "${partials[@]}"; do
-      printf '  %s\n' "$entry" >&2
-    done
-    return 1
-  fi
+  file_check_partials "$dest_dir" || return $?
 
   # find instead of a glob: an empty match aborts under zsh (NOMATCH).
   while IFS= read -r entry; do
@@ -113,13 +95,7 @@ buffer_backup() {
   fi
 
   source_size="$(command stat -c '%s' -- "$source_file")" || return $?
-  dest_avail="$(command df --output=avail -B1 -- "$dest_dir" | command tail -n 1)" || return $?
-  dest_avail="${dest_avail//[[:space:]]/}"
-
-  if [[ ! "$dest_avail" =~ ^[0-9]+$ ]]; then
-    printf 'buffer_backup: could not determine free space in %s\n' "$dest_dir" >&2
-    return 1
-  fi
+  dest_avail="$(volume_get_free "$dest_dir")" || return $?
 
   if ((dest_avail + victim_size < source_size)); then
     printf 'buffer_backup: not enough space in %s\n' "$dest_dir" >&2
@@ -145,55 +121,13 @@ buffer_backup() {
     command rm -f -- "$victim_hash" || return $?
   fi
 
-  printf 'buffer_backup: copying %s -> %s\n' "$source_file" "$temp_file"
-  command dd if="$source_file" of="$temp_file" bs=16M iflag=direct oflag=direct \
-    conv=excl,fsync status=progress || {
-    rc=$?
-    command rm -f -- "$temp_file"
-    return $rc
-  }
+  file_copy_verified "$source_file" "$dest_file" "$source_hash" || return $?
 
-  # Mirror mode and mtime, but never rely on mtime to detect changes.
-  { command chmod --reference="$source_file" -- "$temp_file" &&
-    command touch -r "$source_file" -- "$temp_file"; } || {
-    rc=$?
-    command rm -f -- "$temp_file"
-    return $rc
-  }
-
-  if attached="$(__dotfiles_loop_find_attached "$source_file")"; then
-    printf 'buffer_backup: source got attached to a loop device during copy: %s\n' "$attached" >&2
-    command rm -f -- "$temp_file"
-    return 1
-  fi
-
-  printf 'buffer_backup: computing destination hash (read-back)...\n'
-  dest_hash="$(hash_compute "$temp_file")" || {
-    rc=$?
-    command rm -f -- "$temp_file"
-    return $rc
-  }
-
-  if [[ "$source_hash" != "$dest_hash" ]]; then
-    printf 'buffer_backup: hash mismatch.\n' >&2
-    printf '  source: %s\n' "$source_hash" >&2
-    printf '  dest:   %s\n' "$dest_hash" >&2
-    command rm -f -- "$temp_file"
-    return 1
-  fi
-
-  command mv -T -- "$temp_file" "$dest_file" || {
-    rc=$?
-    command rm -f -- "$temp_file"
-    return $rc
-  }
-
-  printf '%s  %s\n' "$dest_hash" "${dest_file##*/}" > "$hash_file" || return $?
+  printf '%s  %s\n' "$source_hash" "${dest_file##*/}" > "$hash_file" || return $?
   command sync -- "$hash_file" "$dest_dir" || return $?
 
   printf 'buffer_backup: backup created successfully.\n'
   command stat -c '  %n | %y | %s bytes | %U:%G | %a' -- "$dest_file"
-  printf 'buffer_backup: hash ok: %s\n' "$dest_hash"
 }
 
 buffer_verify() {
@@ -226,10 +160,7 @@ buffer_verify() {
 
   [[ -n "${2:-}" ]] && pattern=".buffer_$2"
 
-  if ! command mountpoint -q "$dir" 2> '/dev/null'; then
-    printf 'buffer_verify: volume not mounted: %s\n' "$dir" >&2
-    return 1
-  fi
+  volume_check "$dir" || return $?
 
   # find instead of a glob: an empty match aborts under zsh (NOMATCH).
   while IFS= read -r entry; do
@@ -261,4 +192,113 @@ buffer_verify() {
 
   printf 'buffer_verify: %d checked, %d failed.\n' "$checked" "$failed"
   ((failed == 0))
+}
+
+buffer_restore() {
+  local -r media="/run/media/$USER"
+  local -r date_regex='^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+  local -r dest_dir="$media/Offload"
+  local -r dest_file="$dest_dir/.buffer"
+
+  local source_dir source_file hash_file pattern regex attached
+  local source_size dest_avail expected source_hash entry name
+  local -a backups=()
+
+  case "${1:-}" in
+    'buffer')
+      source_dir="$media/Buffer"
+      pattern='.buffer'
+      regex='^\.buffer$'
+      ;;
+    'buffers')
+      source_dir="$media/Buffers"
+      pattern='.buffer_????-??-??'
+      regex='^\.buffer_[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+      ;;
+  esac
+
+  if [[ -z "$source_dir" || $# -gt 2 || ( -n "${2:-}" && ( "$1" != 'buffers' || ! "$2" =~ $date_regex ) ) ]]; then
+    printf 'buffer_restore: invalid arguments.\n' >&2
+    printf '  usage: buffer_restore buffer\n' >&2
+    printf '         buffer_restore buffers [YYYY-MM-DD]\n' >&2
+    return 1
+  fi
+
+  [[ -n "${2:-}" ]] && pattern=".buffer_$2"
+
+  volume_check "$source_dir" "$dest_dir" || return $?
+
+  # Never overwrite: an existing file must be removed explicitly first.
+  if [[ -e "$dest_file" || -L "$dest_file" ]]; then
+    printf 'buffer_restore: destination exists, remove it first: %s\n' "$dest_file" >&2
+    return 1
+  fi
+
+  file_check_partials "$dest_dir" || return $?
+
+  # find instead of a glob: an empty match aborts under zsh (NOMATCH).
+  while IFS= read -r entry; do
+    name="${entry##*/}"
+    [[ "$name" =~ $regex ]] || continue
+    backups+=("$entry")
+  done < <(command find "$source_dir" -maxdepth 1 -type f -name "$pattern" | command sort)
+
+  if ((${#backups[@]} == 0)); then
+    printf 'buffer_restore: no copies found: %s/%s\n' "$source_dir" "$pattern" >&2
+    return 1
+  fi
+
+  # Sorted by date, so the last copy is the newest one.
+  for entry in "${backups[@]}"; do
+    source_file="$entry"
+  done
+
+  name="${source_file##*/}"
+  hash_file="$source_dir/.hash${name#.buffer}"
+
+  printf 'buffer_restore: restoring from:\n'
+  command stat -c '  %n | %y | %s bytes | %U:%G | %a' -- "$source_file"
+
+  if [[ ! -f "$hash_file" ]]; then
+    printf 'buffer_restore: hash file not found: %s\n' "$hash_file" >&2
+    return 1
+  fi
+
+  if ! expected="$(__dotfiles_hash_lookup "$name" "$hash_file")"; then
+    printf 'buffer_restore: no entry for %s in %s\n' "$name" "$hash_file" >&2
+    return 1
+  fi
+
+  if attached="$(__dotfiles_loop_find_attached "$source_file")"; then
+    printf 'buffer_restore: file in use by a loop device (mounted?): %s\n' "$attached" >&2
+    return 1
+  fi
+
+  source_size="$(command stat -c '%s' -- "$source_file")" || return $?
+  dest_avail="$(volume_get_free "$dest_dir")" || return $?
+
+  if ((dest_avail < source_size)); then
+    printf 'buffer_restore: not enough space in %s\n' "$dest_dir" >&2
+    printf '  needed:    %s bytes\n' "$source_size" >&2
+    printf '  available: %s bytes\n' "$dest_avail" >&2
+    return 1
+  fi
+
+  # Never restore a copy that no longer matches its hash file.
+  printf 'buffer_restore: computing source hash...\n'
+  source_hash="$(hash_compute "$source_file")" || return $?
+
+  if [[ "$source_hash" != "$expected" ]]; then
+    printf 'buffer_restore: source does not match its hash file.\n' >&2
+    printf '  expected: %s\n' "$expected" >&2
+    printf '  actual:   %s\n' "$source_hash" >&2
+    return 1
+  fi
+
+  printf 'buffer_restore: source hash ok: %s\n' "$source_hash"
+
+  file_copy_verified "$source_file" "$dest_file" "$expected" || return $?
+
+  printf 'buffer_restore: restored successfully.\n'
+  command stat -c '  %n | %y | %s bytes | %U:%G | %a' -- "$dest_file"
 }

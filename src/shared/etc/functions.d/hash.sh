@@ -4,7 +4,7 @@ hash_verify() {
   local file="$1"
   local hash_file="$2"
   local name="${file##*/}"
-  local line expected actual found=''
+  local expected actual
 
   if [[ -z "$file" || -z "$hash_file" ]]; then
     printf 'hash_verify: invalid arguments.\n' >&2
@@ -22,21 +22,7 @@ hash_verify() {
     return 1
   fi
 
-  # Entries read "<hash>  <name>" (text mode) or "<hash> *<name>" (binary mode).
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line="${line%$'\r'}"
-    expected="${line:0:64}"
-    [[ "$expected" =~ ^[0-9a-f]{64}$ ]] || continue
-
-    case "${line:64}" in
-      "  $name" | " *$name")
-        found=1
-        break
-        ;;
-    esac
-  done < "$hash_file"
-
-  if [[ -z "$found" ]]; then
+  if ! expected="$(__dotfiles_hash_lookup "$name" "$hash_file")"; then
     printf 'hash_verify: no entry for %s in %s\n' "$name" "$hash_file" >&2
     return 1
   fi

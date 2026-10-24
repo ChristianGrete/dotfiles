@@ -165,7 +165,7 @@ __dotfiles_complete_buffer_backup() {
 }
 __dotfiles_complete_bind __dotfiles_complete_buffer_backup buffer_backup bb
 
-# buffer_verify: a target, then the dates of existing buffer files.
+# buffer_verify / buffer_restore: a target, then the dates of existing buffer files.
 __dotfiles_complete_buffer_verify() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
   local words=''
@@ -184,6 +184,7 @@ __dotfiles_complete_buffer_verify() {
   # shellcheck disable=SC2207
   COMPREPLY=($(compgen -W "$words" -- "$cur"))
 }
-__dotfiles_complete_bind __dotfiles_complete_buffer_verify buffer_verify bv
+__dotfiles_complete_bind __dotfiles_complete_buffer_verify buffer_verify bv \
+  buffer_restore br
 
 unset -f __dotfiles_complete_bind

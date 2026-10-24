@@ -11,6 +11,10 @@ if command -v 'buffer_backup' > '/dev/null' 2>&1; then
   alias bb='buffer_backup'
 fi
 
+if command -v 'buffer_restore' > '/dev/null' 2>&1; then
+  alias br='buffer_restore'
+fi
+
 if command -v 'buffer_verify' > '/dev/null' 2>&1; then
   alias bv='buffer_verify'
 fi

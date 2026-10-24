@@ -61,7 +61,10 @@ dotfiles/
           appledouble_linux.sh    # Loaded only on Linux
           brew_darwin.sh          # Loaded only on macOS (Darwin)
           buffer_linux.sh         # Loaded only on Linux
+          file.sh                 # Always loaded
+          file_linux.sh           # Loaded only on Linux
           internals.sh            # Always loaded (__dotfiles_* helpers)
+          internals_linux.sh      # Loaded only on Linux (__dotfiles_* helpers)
           visual.sh               # Always loaded
           git.sh                  # Always loaded
           hash.sh                 # Always loaded
@@ -70,6 +73,8 @@ dotfiles/
           keyfiles_linux.sh       # Loaded only on Linux
           keyfiles_darwin.sh      # Loaded only on macOS (Darwin)
           utils.sh                # Always loaded
+          volume.sh               # Always loaded
+          volume_linux.sh         # Loaded only on Linux
       opt/
         README.md       # Seed for extension install surface (future use)
       home/             # Shell-agnostic home artefacts
@@ -233,7 +238,11 @@ immediately clear; common short forms are fine (e.g., `calc`), cryptic ones
 are not. Every function in a module ends up
 in the user's shell. Internal helpers live in `internals.sh` under the
 `__dotfiles_` prefix and follow the same scheme (e.g.,
-`__dotfiles_loop_find_attached`), even when only one OS uses them.
+`__dotfiles_hash_lookup`). OS-specific helpers go into
+`internals_linux.sh` / `internals_darwin.sh` (e.g.,
+`__dotfiles_loop_find_attached`). `__dotfiles_*` helpers are internal to the
+dotfiles ecosystem (core and first-party extensions) and not meant for
+interactive use.
 
 ## Build and Test Commands
 

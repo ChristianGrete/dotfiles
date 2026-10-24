@@ -60,7 +60,7 @@ __dotfiles_complete_buffer_backup() {
   (( ${#targets} )) && _describe -t volumes 'volume' targets
 }
 
-# buffer_verify: a target, then the dates of existing buffer files.
+# buffer_verify / buffer_restore: a target, then the dates of existing buffer files.
 __dotfiles_complete_buffer_verify() {
   local -a targets
 
@@ -93,6 +93,6 @@ __dotfiles_compdef_if __dotfiles_complete_git_remote_branch git_pull git_push
 __dotfiles_compdef_if __dotfiles_complete_git_local_branch git_nuke
 __dotfiles_compdef_if __dotfiles_complete_appledouble_clean appledouble_clean
 __dotfiles_compdef_if __dotfiles_complete_buffer_backup buffer_backup
-__dotfiles_compdef_if __dotfiles_complete_buffer_verify buffer_verify
+__dotfiles_compdef_if __dotfiles_complete_buffer_verify buffer_verify buffer_restore
 
 unset -f __dotfiles_compdef_if
