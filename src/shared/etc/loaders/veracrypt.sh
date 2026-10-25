@@ -6,11 +6,11 @@ __dotfiles_loader_veracrypt() {
   local __dotfiles_loader_target="$1"
   local __dotfiles_loader_dir __dotfiles_loader_file __dotfiles_loader_answer
   local -a __dotfiles_loader_mounts=()
-  local __dotfiles_loader_traps=''
+  local __dotfiles_loader_traps=false
 
   # Zsh binds EXIT traps set in functions to the function; keep them global.
   if [[ -n "$ZSH_VERSION" && ! -o 'posix_traps' ]]; then
-    __dotfiles_loader_traps='toggle'
+    __dotfiles_loader_traps=true
   fi
 
   # Collect first: a redirected loop would leak its stdin into sourced files.
@@ -28,9 +28,9 @@ __dotfiles_loader_veracrypt() {
     [[ "$__dotfiles_loader_answer" == [yY] ]] || continue
 
     export __DOTFILES_LOADER_VERACRYPT_PATH="$__dotfiles_loader_dir"
-    [[ -n "$__dotfiles_loader_traps" ]] && setopt 'posix_traps'
+    [[ "$__dotfiles_loader_traps" == true ]] && setopt 'posix_traps'
     . "$__dotfiles_loader_file"
-    [[ -n "$__dotfiles_loader_traps" ]] && unsetopt 'posix_traps'
+    [[ "$__dotfiles_loader_traps" == true ]] && unsetopt 'posix_traps'
     unset __DOTFILES_LOADER_VERACRYPT_PATH
   done
 }

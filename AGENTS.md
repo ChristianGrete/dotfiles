@@ -363,6 +363,9 @@ Single quotes around string literals signal "this is a fixed value, not a
 variable or expansion." Double quotes are for strings containing expansions.
 Maintain this convention consistently.
 
+Pseudo-booleans are the exception: bare `true` / `false`, checked with
+`[[ "$flag" == true ]]`. Unquoted, they read as booleans rather than strings.
+
 ### Function Style
 
 - Use `local` for all variables inside functions.
