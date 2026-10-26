@@ -28,6 +28,7 @@ dotfiles/
   CHANGELOG.md          # Keep a Changelog format, updated on release
   CODEOWNERS            # Code owner (@ChristianGrete) for all paths
   CONTRIBUTING.md       # Contributor quick-start (points to this file)
+  EXTENSIONS.md         # Extension layout, entry points, and loading
   LICENSE               # MIT license
   Makefile              # Entry point for build tooling
   README.md             # Project overview
@@ -60,7 +61,6 @@ dotfiles/
         functions.d/    # Individual function modules
           appledouble_linux.sh    # Loaded only on Linux
           brew_darwin.sh          # Loaded only on macOS (Darwin)
-          buffer_linux.sh         # Loaded only on Linux
           file.sh                 # Always loaded
           file_linux.sh           # Loaded only on Linux
           internals.sh            # Always loaded (__dotfiles_* helpers)
@@ -76,7 +76,7 @@ dotfiles/
           volume.sh               # Always loaded
           volume_linux.sh         # Loaded only on Linux
       opt/
-        README.md       # Seed for extension install surface (future use)
+        README.md       # Seed for extension install surface
       home/             # Shell-agnostic home artefacts
         Brewfile.rb     # Homebrew package list (macOS)
         default.gitconfig  # Git defaults (included by ~/.gitconfig)
@@ -158,15 +158,19 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 
 `rc.bash` (or `rc.zsh`) sources internal modules in deterministic order:
 
-1. `$DOTFILES/etc/bootstrap.sh` — self-guarded DOTFILES_OS, DOTFILES_SHELL, DOTFILES_VERSION
+1. `$DOTFILES/etc/bootstrap.sh` — DOTFILES_OS (guarded), DOTFILES_SHELL,
+   DOTFILES_VERSION, DOTFILES_EXTENSIONS (always reset, since a child shell may
+   run from another prefix)
 2. `$DOTFILES/etc/environment.sh` — exported variables
 3. `$DOTFILES/etc/functions.sh` — OS-aware function loader
 4. `$DOTFILES/etc/aliases.sh` — aliases (may reference functions)
 5. `$DOTFILES/etc/completions.bash` — lazy alias completion wiring (bash);
    `completions.zsh` runs `compinit` on zsh
 6. `$DOTFILES/etc/prompt.bash` — shell-specific prompt setup
-7. `$DOTFILES/etc/loaders/veracrypt.sh` — VeraCrypt dotfile sourcing (Linux only)
-8. `fastfetch` — system info on startup (skipped in VS Code terminal)
+7. `$DOTFILES_EXTENSIONS/*` — enabled extensions, sourced at
+   the top level (see [EXTENSIONS.md](EXTENSIONS.md))
+8. `$DOTFILES/etc/loaders/veracrypt.sh` — VeraCrypt dotfile sourcing (Linux only)
+9. `fastfetch` — system info on startup (skipped in VS Code terminal)
 
 `profile.bash` (or `profile.zsh`) sources `bootstrap.sh` first, then runs
 one-time loaders (e.g., VeraCrypt). This ensures `DOTFILES_OS` is available
@@ -178,6 +182,7 @@ The profile files also print a separating newline after the OS login message
 before `bootstrap.sh` since it has no dependencies.
 
 This order matters: aliases reference functions, so functions must load first.
+Extensions load after the core modules so they may rely on the core API.
 Loaders run last because they may depend on all preceding modules.
 
 **VeraCrypt volume dotfiles.** A volume mounted at `/media/veracrypt*` may
@@ -209,11 +214,10 @@ Aliases do not inherit their target command's completion automatically, so the
   database at `$DOTFILES/var/cache/zcompdump` (regenerable runtime state, hence
   `var/cache/`).
 - **Custom function wrappers** (`git_pull`/`git_push`/`git_nuke`,
-  `appledouble_clean`, `buffer_*`) have no command to inherit from, so both
+  `appledouble_clean`) have no command to inherit from, so both
   modules hand-wire small completers: git refs (branches, plus remotes at the
-  remote position) read at completion time, the `--dry-run`/`-n` flag for
-  `appledouble_clean`, and fixed arguments plus existing buffer files for the
-  `buffer_*` functions. Their aliases are covered too — bound explicitly in
+  remote position) read at completion time and the `--dry-run`/`-n` flag for
+  `appledouble_clean`. Their aliases are covered too — bound explicitly in
   Bash, inherited via alias expansion in Zsh. Bindings are guarded so a
   completer is wired only to targets that actually exist: Linux-only wrappers
   (and their aliases) stay unbound on macOS while the git wrappers, present on
@@ -429,8 +433,9 @@ a unified `printf` convention:
 
 ## What NOT to Do
 
-- Do not add an extension/package system. The `opt/` and `var/` directories and
-  `extensions.d/` activation model are planned for later.
+- Do not add extension tooling (install, enable, build pipelines). Extensions
+  are set up by hand for now (see [EXTENSIONS.md](EXTENSIONS.md)); the core
+  only loads what is linked into `var/dotfiles/extensions.d/`.
 - Do not add NVM, PNPM, or other tool-specific setup to the dotfiles. Those
   belong in the user's `~/.bashrc` until dedicated extensions exist.
 - Do not modify files in `build/` or `dist/`. They are generated artifacts.
@@ -447,9 +452,9 @@ a unified `printf` convention:
 
 These are documented for context only. Do not build any of this:
 
-- **Extension system:** Extensions install into `opt/<provider>/<name>/` and
-  activate via numbered symlinks in `var/dotfiles/extensions.d/`. Provider
-  namespace follows reverse-DNS (`dotfiles.christiangrete.com`).
+- **Extension tooling:** Commands to install, enable, disable, and uninstall
+  extensions in `opt/<provider>/<name>/` and `var/dotfiles/extensions.d/`.
+  Provider namespace follows reverse-DNS (`dotfiles.christiangrete.com`).
 - **Extension install pipeline:** Clone into `var/git/`, build, link into
   `opt/`, activate via symlink.
 - **Separate `dotfiles-min` project:** A standalone Rust project (own repo) that

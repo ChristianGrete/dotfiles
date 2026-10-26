@@ -5,7 +5,7 @@ outside this repository and are made available per machine, so a host only
 carries what it actually needs.
 
 **Status:** Experimental. Everything below is set up by hand; there is no
-tooling yet. The core does not load extensions yet — see
+tooling yet. The core loads enabled extensions on shell startup — see
 [Loading](#loading).
 
 ## Vocabulary
@@ -44,10 +44,22 @@ gitignored, so all of it is local to the machine.
 
 ## Entry Points
 
-An installed extension must provide one entry point per shell at its root:
+An installed extension provides its entry points at its root:
 
 - `extension.bash` — sourced by the Bash prefix.
 - `extension.zsh` — sourced by the Zsh prefix.
+- `extension.sh` — optional fallback for both shells, sourced only if the
+  shell-specific entry point is missing. Must be valid in Bash and Zsh.
+
+While an entry point is sourced, `$__DOTFILES_EXTENSION_PATH` holds the
+extension root inside `extensions.d/`, so it can source its own files:
+
+```bash
+. "$__DOTFILES_EXTENSION_PATH/functions.sh"
+```
+
+The variable is exported and unset right after the loop. Code that needs the
+path later (e.g., inside functions) must copy it into its own global.
 
 This is the only convention so far. Everything else inside an extension is up
 to its author.
@@ -103,9 +115,9 @@ done
 
 ### 5. Verify
 
-```bash
-. build/bash/var/dotfiles/extensions.d/<NN>-<name>/extension.bash
-```
+Open a new shell. The extension is loaded like any other part of the rc file.
+`make smoke` loads the local prefix as well, so it covers enabled extensions
+too.
 
 ### Disable and Uninstall
 
@@ -121,10 +133,10 @@ are needed. There is no OS check in the extension mechanism.
 
 ## Loading
 
-Not implemented yet. The planned model:
-
-- `rc.bash` / `rc.zsh` iterate `var/dotfiles/extensions.d/*` in order and
-  source `extension.bash` / `extension.zsh` of each enabled extension.
+- `rc.bash` / `rc.zsh` iterate `$DOTFILES_EXTENSIONS/*` (set by the core to
+  `$DOTFILES/var/dotfiles/extensions.d`) in order and
+  source the entry point of each enabled extension (shell-specific first,
+  then `extension.sh`). Entries without a readable entry point are skipped.
 - Sourcing happens at the top level of the rc file, not inside a function.
   Extensions therefore behave exactly like code in `~/.bashrc` / `~/.zshrc`:
   `declare` and `typeset` create globals, traps are global, and `return` only

@@ -22,6 +22,9 @@ smoke_bash() {
     . "$DOTFILES/home/rc.bash"
     fail() { printf "smoke(bash): %s.\n" "$1" >&2; exit 1; }
     [[ -n "$DOTFILES_OS" ]]              || fail "DOTFILES_OS unset (bootstrap)"
+    [[ "$DOTFILES_SHELL" == "bash" ]]    || fail "DOTFILES_SHELL not bash (bootstrap)"
+    [[ "$DOTFILES_EXTENSIONS" == "$DOTFILES/var/dotfiles/extensions.d" ]] \
+      || fail "DOTFILES_EXTENSIONS wrong (bootstrap)"
     declare -F git_branch > "/dev/null"  || fail "git_branch missing (functions)"
     alias gb > "/dev/null" 2>&1          || fail "gb alias missing (aliases)"
     complete -p gp > "/dev/null" 2>&1    || fail "gp completion missing (completions)"
@@ -48,6 +51,9 @@ smoke_zsh() {
     . "$DOTFILES/home/rc.zsh"
     fail() { printf "smoke(zsh): %s.\n" "$1" >&2; exit 1; }
     [[ -n "$DOTFILES_OS" ]]                       || fail "DOTFILES_OS unset (bootstrap)"
+    [[ "$DOTFILES_SHELL" == "zsh" ]]              || fail "DOTFILES_SHELL not zsh (bootstrap)"
+    [[ "$DOTFILES_EXTENSIONS" == "$DOTFILES/var/dotfiles/extensions.d" ]] \
+      || fail "DOTFILES_EXTENSIONS wrong (bootstrap)"
     (( $+functions[git_branch] ))                 || fail "git_branch missing (functions)"
     alias gb > "/dev/null" 2>&1                   || fail "gb alias missing (aliases)"
     (( $+functions[compdef] ))                    || fail "compinit did not run (completions)"

@@ -7,18 +7,6 @@ if command -v 'appledouble_clean' > '/dev/null' 2>&1; then
   alias adc='appledouble_clean'
 fi
 
-if command -v 'buffer_backup' > '/dev/null' 2>&1; then
-  alias bb='buffer_backup'
-fi
-
-if command -v 'buffer_restore' > '/dev/null' 2>&1; then
-  alias br='buffer_restore'
-fi
-
-if command -v 'buffer_verify' > '/dev/null' 2>&1; then
-  alias bv='buffer_verify'
-fi
-
 if command -v 'clear' > '/dev/null' 2>&1; then
   alias c='clear && unset __dotfiles_prompt_sep'
 else

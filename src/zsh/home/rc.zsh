@@ -6,6 +6,17 @@
 . "$DOTFILES/etc/completions.zsh"
 . "$DOTFILES/etc/prompt.zsh"
 
+# Source enabled extensions at the top level (see EXTENSIONS.md).
+for __DOTFILES_EXTENSION_PATH in "$DOTFILES_EXTENSIONS/"*(N); do
+  export __DOTFILES_EXTENSION_PATH
+  if [[ -r "$__DOTFILES_EXTENSION_PATH/extension.zsh" ]]; then
+    . "$__DOTFILES_EXTENSION_PATH/extension.zsh"
+  elif [[ -r "$__DOTFILES_EXTENSION_PATH/extension.sh" ]]; then
+    . "$__DOTFILES_EXTENSION_PATH/extension.sh"
+  fi
+done
+unset __DOTFILES_EXTENSION_PATH
+
 # Source loaders for one-time setup tasks.
 if [[ "$DOTFILES_OS" == 'linux' ]]; then
   . "$DOTFILES/etc/loaders/veracrypt.sh"

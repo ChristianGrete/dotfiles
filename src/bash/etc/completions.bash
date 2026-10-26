@@ -145,46 +145,4 @@ __dotfiles_complete_appledouble_clean() {
 }
 __dotfiles_complete_bind __dotfiles_complete_appledouble_clean appledouble_clean adc
 
-# buffer_backup: a source, then the valid destinations.
-__dotfiles_complete_buffer_backup() {
-  local cur="${COMP_WORDS[COMP_CWORD]}"
-  local words=''
-
-  case "$COMP_CWORD" in
-    1) words='offload buffer' ;;
-    2)
-      case "${COMP_WORDS[1]}" in
-        offload) words='buffer buffers' ;;
-        buffer) words='buffers' ;;
-      esac
-      ;;
-  esac
-
-  # shellcheck disable=SC2207
-  COMPREPLY=($(compgen -W "$words" -- "$cur"))
-}
-__dotfiles_complete_bind __dotfiles_complete_buffer_backup buffer_backup bb
-
-# buffer_verify / buffer_restore: a target, then the dates of existing buffer files.
-__dotfiles_complete_buffer_verify() {
-  local cur="${COMP_WORDS[COMP_CWORD]}"
-  local words=''
-
-  case "$COMP_CWORD" in
-    1) words='buffer buffers' ;;
-    2)
-      if [[ "${COMP_WORDS[1]}" == 'buffers' ]]; then
-        words="$(command find "/run/media/$USER/Buffers" -maxdepth 1 -type f \
-          -name '.buffer_????-??-??' -printf '%f\n' 2> '/dev/null')"
-        words="${words//.buffer_/}"
-      fi
-      ;;
-  esac
-
-  # shellcheck disable=SC2207
-  COMPREPLY=($(compgen -W "$words" -- "$cur"))
-}
-__dotfiles_complete_bind __dotfiles_complete_buffer_verify buffer_verify bv \
-  buffer_restore br
-
 unset -f __dotfiles_complete_bind
