@@ -11,4 +11,4 @@ version="$(git -C "$REPO_DIR" rev-parse --short HEAD 2> '/dev/null' || printf 'u
 
 dotfiles_build "$REPO_DIR" 'build' "$version"
 
-printf 'Build complete.\n'
+printf 'build: done (version %s).\n' "$version"

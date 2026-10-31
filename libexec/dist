@@ -8,7 +8,7 @@ VERSION_FILE="$REPO_DIR/VERSION"
 . "$REPO_DIR/libexec/_common"
 
 if [[ ! -f "$VERSION_FILE" ]]; then
-  printf 'Error: VERSION file not found: %s\n' "$VERSION_FILE" >&2
+  printf 'dist: VERSION file not found: %s\n' "$VERSION_FILE" >&2
   exit 1
 fi
 
@@ -16,7 +16,7 @@ version="$(< "$VERSION_FILE")"
 
 # Release builds require a plain SemVer (X.Y.Z) from the VERSION file.
 if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  printf 'Error: VERSION does not contain a valid SemVer: "%s"\n' "$version" >&2
+  printf 'dist: VERSION is not a plain SemVer (X.Y.Z): %s\n' "$version" >&2
   exit 1
 fi
 
@@ -25,4 +25,4 @@ rm -rf "$REPO_DIR/dist"
 
 dotfiles_build "$REPO_DIR" 'dist' "$version"
 
-printf 'Dist complete (version %s).\n' "$version"
+printf 'dist: done (version %s).\n' "$version"

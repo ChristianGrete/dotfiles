@@ -444,7 +444,8 @@ Pseudo-booleans are the exception: bare `true` / `false`, checked with
 ### User-Facing Output
 
 Functions that produce user-facing messages (errors, status, progress) follow
-a unified `printf` convention:
+a unified `printf` convention. The `libexec/` commands follow it too, with the
+command name as prefix (e.g., `build: done (version abc1234).`):
 
 - **Always use `printf`, never `echo`** for messages. `echo` is only acceptable
   in aliases where no flags are used.

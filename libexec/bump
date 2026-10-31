@@ -8,12 +8,13 @@ VERSION_FILE="$REPO_DIR/VERSION"
 level="${1:-}"
 
 if [[ "$level" != 'patch' && "$level" != 'minor' && "$level" != 'major' ]]; then
-  printf 'Error: invalid bump level "%s". Use "patch", "minor", or "major".\n' "$level" >&2
+  printf 'bump: invalid arguments.\n' >&2
+  printf '  usage: make bump LEVEL=patch|minor|major\n' >&2
   exit 1
 fi
 
 if [[ ! -f "$VERSION_FILE" ]]; then
-  printf 'Error: VERSION file not found: %s\n' "$VERSION_FILE" >&2
+  printf 'bump: VERSION file not found: %s\n' "$VERSION_FILE" >&2
   exit 1
 fi
 
@@ -21,7 +22,7 @@ current="$(< "$VERSION_FILE")"
 
 # Validate the current version is a plain SemVer (X.Y.Z).
 if [[ ! "$current" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  printf 'Error: VERSION does not contain a valid SemVer: "%s"\n' "$current" >&2
+  printf 'bump: VERSION is not a plain SemVer (X.Y.Z): %s\n' "$current" >&2
   exit 1
 fi
 
@@ -37,4 +38,4 @@ next="${major}.${minor}.${patch}"
 
 printf '%s\n' "$next" > "$VERSION_FILE"
 
-printf 'Bumped version: %s -> %s\n' "$current" "$next"
+printf 'bump: %s -> %s\n' "$current" "$next"

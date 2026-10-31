@@ -47,4 +47,4 @@ if [[ -d "$REPO_DIR/build" ]]; then
   rmdir "$REPO_DIR/build" 2> '/dev/null' || true
 fi
 
-printf 'Clean complete.\n'
+printf 'clean: done.\n'

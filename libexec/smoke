@@ -11,8 +11,12 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 # own guard. TERM_PROGRAM=vscode suppresses fastfetch during the run, and stdin
 # from /dev/null keeps the VeraCrypt loader from prompting.
 
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
 smoke_bash() {
   local prefix="$REPO_DIR/build/bash"
+  local rc=0
 
   if [[ ! -f "$prefix/home/rc.bash" ]]; then
     printf 'smoke: build/bash not found; run "make build" first.\n' >&2
@@ -30,7 +34,13 @@ smoke_bash() {
     alias gb > "/dev/null" 2>&1          || fail "gb alias missing (aliases)"
     complete -p gp > "/dev/null" 2>&1    || fail "gp completion missing (completions)"
     declare -F __dotfiles_prompt_command > "/dev/null" || fail "prompt not set up"
-  ' < '/dev/null' || return 1
+  ' < '/dev/null' 2> "$tmp/stderr" || rc=$?
+
+  # Bash notes a missing terminal for job control (e.g., CI); show the rest.
+  grep -v -e 'cannot set terminal process group' -e 'no job control in this shell' \
+    "$tmp/stderr" >&2 || true
+
+  [[ "$rc" -eq 0 ]] || return 1
 
   printf 'smoke: bash ok.\n'
 }

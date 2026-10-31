@@ -57,7 +57,7 @@ isolate_git() {
 __test_run() {
   local name rc reason
   local passed=0 failed=0 skipped=0
-  local log="$TEST_RESULTS.log" details="$TEST_RESULTS.details"
+  local log="$TEST_RESULTS.log" details="$TEST_RESULTS.details" skips="$TEST_RESULTS.skips"
   local -a names=()
 
   # Collect first, so no test can read the list from stdin.
@@ -66,6 +66,7 @@ __test_run() {
   done < <(command grep -o '^test_[A-Za-z0-9_]*' "$TEST_FILE")
 
   : > "$details"
+  : > "$skips"
 
   for name in "${names[@]}"; do
     TEST_TMP="$(command mktemp -d)"
@@ -79,7 +80,7 @@ __test_run() {
       77)
         skipped=$((skipped + 1))
         IFS= read -r reason < "$log" || true
-        printf '  skip: %s: %s\n' "$name" "$reason" >> "$details"
+        printf '%s\n' "$reason" >> "$skips"
         ;;
       *)
         failed=$((failed + 1))
@@ -89,6 +90,11 @@ __test_run() {
     esac
 
     command rm -rf "$TEST_TMP"
+  done
+
+  # One line per skip reason, however many tests share it.
+  command sort "$skips" | command uniq -c | while read -r count reason; do
+    printf '  skip (%d): %s\n' "$count" "$reason" >> "$details"
   done
 
   printf 'test: %s: %s: %d passed, %d failed, %d skipped\n' \

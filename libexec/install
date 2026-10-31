@@ -5,15 +5,18 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 # Determine which shell variant to install (default: current login shell).
-shell="${1:-$(basename "$SHELL")}"
+shell="${1:-$(basename "${SHELL:-}")}"
 
 if [[ "$shell" != 'bash' && "$shell" != 'zsh' ]]; then
-  printf 'Error: unsupported shell "%s". Use "bash" or "zsh".\n' "$shell" >&2
+  printf 'install: unsupported shell: %s\n' "$shell" >&2
+  printf '  usage: libexec/install [bash|zsh]\n' >&2
   exit 1
 fi
 
 # Determine install location based on OS.
-case "$(uname -s)" in
+os="$(uname -s)"
+
+case "$os" in
   Linux)
     install_dir="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfiles"
     export_line='export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfiles"'
@@ -23,7 +26,7 @@ case "$(uname -s)" in
     export_line='export DOTFILES="$HOME/Library/Application Support/com.christiangrete.dotfiles"'
     ;;
   *)
-    printf 'Error: unsupported OS.\n' >&2
+    printf 'install: unsupported OS: %s\n' "$os" >&2
     exit 1
     ;;
 esac
@@ -32,7 +35,7 @@ source_dir="$REPO_DIR/build/$shell"
 
 # Verify the build exists.
 if [[ ! -d "$source_dir" ]]; then
-  printf 'Error: build/%s/ does not exist. Run "make build" first.\n' "$shell" >&2
+  printf 'install: build/%s not found; run "make build" first.\n' "$shell" >&2
   exit 1
 fi
 
@@ -40,31 +43,31 @@ fi
 if [[ -L "$install_dir" ]]; then
   rm "$install_dir"
 elif [[ -e "$install_dir" ]]; then
-  printf 'Error: %s already exists and is not a symlink. Remove it first.\n' "$install_dir" >&2
+  printf 'install: not a symlink, remove it first: %s\n' "$install_dir" >&2
   exit 1
 fi
 
 mkdir -p "$(dirname "$install_dir")"
 ln -s "$source_dir" "$install_dir"
 
-printf 'Installed: %s -> %s\n\n' "$install_dir" "$source_dir"
+printf 'install: linked %s -> %s\n\n' "$install_dir" "$source_dir"
 
 # Print shell RC instructions.
 case "$shell" in
   bash)
-    printf 'Add to your ~/.bash_profile:\n\n'
-    printf '    %s\n' "$export_line"
-    printf '    . "$DOTFILES/home/profile.bash"\n\n'
-    printf 'Add to your ~/.bashrc:\n\n'
-    printf '    %s\n' "$export_line"
-    printf '    . "$DOTFILES/home/rc.bash"\n'
+    printf 'install: add to your ~/.bash_profile:\n'
+    printf '  %s\n' "$export_line"
+    printf '  . "$DOTFILES/home/profile.bash"\n\n'
+    printf 'install: add to your ~/.bashrc:\n'
+    printf '  %s\n' "$export_line"
+    printf '  . "$DOTFILES/home/rc.bash"\n'
     ;;
   zsh)
-    printf 'Add to your ~/.zprofile:\n\n'
-    printf '    %s\n' "$export_line"
-    printf '    . "$DOTFILES/home/profile.zsh"\n\n'
-    printf 'Add to your ~/.zshrc:\n\n'
-    printf '    %s\n' "$export_line"
-    printf '    . "$DOTFILES/home/rc.zsh"\n'
+    printf 'install: add to your ~/.zprofile:\n'
+    printf '  %s\n' "$export_line"
+    printf '  . "$DOTFILES/home/profile.zsh"\n\n'
+    printf 'install: add to your ~/.zshrc:\n'
+    printf '  %s\n' "$export_line"
+    printf '  . "$DOTFILES/home/rc.zsh"\n'
     ;;
 esac

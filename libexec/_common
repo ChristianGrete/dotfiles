@@ -13,7 +13,7 @@ dotfiles_build() {
   local shell local_bootstrap
 
   for shell in bash zsh; do
-    printf 'Building %s/%s...\n' "$target" "$shell"
+    printf '%s: building %s/%s...\n' "$target" "$target" "$shell"
 
     # etc/ and home/ are fully derived; safe to recreate from scratch.
     rm -rf "${out:?}/$shell/etc" "${out:?}/$shell/home"
