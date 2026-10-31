@@ -1,17 +1,18 @@
 # shellcheck disable=SC2016
 
 # A prefix that shares etc/ and home/ with the built one but has its own
-# extensions.d, so extensions can be installed per test.
+# extensions.d, so extensions can be installed per test. The space mirrors the
+# macOS install path (Application Support).
 __ext_prefix() {
-  mkdir -p 'prefix/var/dotfiles/extensions.d'
-  ln -s "$DOTFILES/etc" 'prefix/etc'
-  ln -s "$DOTFILES/home" 'prefix/home'
+  mkdir -p 'my prefix/var/dotfiles/extensions.d'
+  ln -s "$DOTFILES/etc" 'my prefix/etc'
+  ln -s "$DOTFILES/home" 'my prefix/home'
 }
 
 # Usage: __ext_add NAME FILE CONTENT
 __ext_add() {
-  mkdir -p "prefix/var/dotfiles/extensions.d/$1"
-  printf '%s\n' "$3" > "prefix/var/dotfiles/extensions.d/$1/$2"
+  mkdir -p "my prefix/var/dotfiles/extensions.d/$1"
+  printf '%s\n' "$3" > "my prefix/var/dotfiles/extensions.d/$1/$2"
 }
 
 # Load rc from the test prefix in a fresh shell, then run $1. Stderr goes to ./err.
@@ -20,7 +21,7 @@ __ext_load() {
 . "\$DOTFILES/home/rc.$TEST_SHELL"
 ${1:-}
 EOF
-  DOTFILES="$PWD/prefix" run_shell < 'load' 2> 'err'
+  DOTFILES="$PWD/my prefix" run_shell < 'load' 2> 'err'
 }
 
 test_extensions_prefer_the_shell_entry_point() {
@@ -42,7 +43,7 @@ test_extensions_load_in_name_order_and_skip_empty_entries() {
   __ext_prefix
   __ext_add '10-b' 'extension.sh' "printf 'b\n'"
   __ext_add '00-a' 'extension.sh' "printf 'a\n'"
-  mkdir -p 'prefix/var/dotfiles/extensions.d/05-empty'
+  mkdir -p 'my prefix/var/dotfiles/extensions.d/05-empty'
 
   assert_eq "$(__ext_load)" "$(printf 'a\nb')"
   assert_eq "$(cat 'err')" ''
@@ -54,7 +55,7 @@ test_extensions_tolerate_an_empty_or_missing_directory() {
   assert_eq "$(__ext_load)" ''
   assert_eq "$(cat 'err')" ''
 
-  rmdir 'prefix/var/dotfiles/extensions.d'
+  rmdir 'my prefix/var/dotfiles/extensions.d'
 
   assert_eq "$(__ext_load)" ''
   assert_eq "$(cat 'err')" ''

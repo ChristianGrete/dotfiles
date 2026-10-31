@@ -116,8 +116,10 @@ done
 ### 5. Verify
 
 Open a new shell. The extension is loaded like any other part of the rc file.
-`make smoke` loads the local prefix as well, so it covers enabled extensions
-too.
+`make smoke` and `make test` load the local prefix as well, so they cover
+enabled extensions too. Loading must be silent: anything an extension writes
+to stderr while loading fails `make test`. `make sandbox` and CI build a fresh
+prefix without extensions.
 
 ### Disable and Uninstall
 

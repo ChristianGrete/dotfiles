@@ -110,3 +110,21 @@ test_aliases_cover_the_public_functions() {
     alias adc > '/dev/null' || fail 'adc is missing.'
   fi
 }
+
+test_os_specific_modules_load_on_their_os_only() {
+  local name
+
+  for name in appledouble_clean file_copy_verified volume_check __dotfiles_loop_find_attached; do
+    if [[ "$DOTFILES_OS" == 'linux' ]]; then
+      command -v "$name" > '/dev/null' || fail "$name is missing on linux."
+    elif command -v "$name" > '/dev/null'; then
+      fail "$name is defined on $DOTFILES_OS."
+    fi
+  done
+
+  if [[ "$DOTFILES_OS" == 'darwin' ]]; then
+    command -v 'brew_install' > '/dev/null' || fail 'brew_install is missing on darwin.'
+  elif command -v 'brew_install' > '/dev/null'; then
+    fail "brew_install is defined on $DOTFILES_OS."
+  fi
+}
