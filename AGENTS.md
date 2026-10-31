@@ -38,7 +38,7 @@ dotfiles/
     workflows/
       check.yml         # CI: lint, build, smoke, test (Ubuntu); build, smoke, test (macOS)
       release.yml       # Release: bump, changelog, dist, sign-tag, publish
-  libexec/              # Build and install scripts (not user-facing)
+  libexec/              # Tooling behind the make targets (not user-facing)
     _common             # Shared build logic sourced by build and dist
     build               # Merges src/ into build/ (dev build, git hash version)
     bump                # Bumps VERSION (patch/minor/major)
@@ -56,7 +56,7 @@ dotfiles/
     shared/             # Shell-agnostic code (valid in both bash and zsh)
       etc/              # Internal modules sourced by rc.bash / rc.zsh
         aliases.sh
-        bootstrap.sh    # Self-guarded DOTFILES_* exports (sourced first)
+        bootstrap.sh    # DOTFILES_* exports (sourced first)
         environment.sh
         functions.sh    # Sources functions.d/*.sh via shared loader
         loaders/        # Shared loader function definitions
@@ -67,16 +67,16 @@ dotfiles/
           brew_darwin.sh          # Loaded only on macOS (Darwin)
           file.sh                 # Always loaded
           file_linux.sh           # Loaded only on Linux
-          internals.sh            # Always loaded (__dotfiles_* helpers)
-          internals_linux.sh      # Loaded only on Linux (__dotfiles_* helpers)
-          visual.sh               # Always loaded
           git.sh                  # Always loaded
           hash.sh                 # Always loaded
-          hash_linux.sh           # Loaded only on Linux
           hash_darwin.sh          # Loaded only on macOS (Darwin)
-          keyfiles_linux.sh       # Loaded only on Linux
+          hash_linux.sh           # Loaded only on Linux
+          internals.sh            # Always loaded (__dotfiles_* helpers)
+          internals_linux.sh      # Loaded only on Linux (__dotfiles_* helpers)
           keyfiles_darwin.sh      # Loaded only on macOS (Darwin)
+          keyfiles_linux.sh       # Loaded only on Linux
           utils.sh                # Always loaded
+          visual.sh               # Always loaded
           volume.sh               # Always loaded
           volume_linux.sh         # Loaded only on Linux
       opt/
@@ -85,7 +85,7 @@ dotfiles/
         Brewfile.rb     # Homebrew package list (macOS)
         default.gitconfig  # Git defaults (included by ~/.gitconfig)
       var/
-        README.md       # Seed for mutable runtime state (future use)
+        README.md       # Seed for mutable runtime state (cache, extensions.d, git)
     bash/               # Bash-specific sources
       etc/
         completions.bash  # Lazy alias completion wiring (bash-completion)
@@ -150,7 +150,8 @@ The install script never modifies `~/.bashrc` or any other file in `$HOME`.
 
 ### Runtime Loading
 
-The user adds two lines to their shell RC file:
+The user adds two lines to their shell RC file (shown for Linux; `make install`
+prints the exact lines for the current OS):
 
 ```bash
 export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfiles"
@@ -178,7 +179,8 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 7. `$DOTFILES_EXTENSIONS/*` — enabled extensions, sourced at
    the top level (see [EXTENSIONS.md](EXTENSIONS.md))
 8. `$DOTFILES/etc/loaders/veracrypt.sh` — VeraCrypt dotfile sourcing (Linux only)
-9. `fastfetch` — system info on startup (skipped in VS Code terminal)
+9. `fastfetch` — system info on startup (interactive shells only, skipped in
+   the VS Code terminal)
 
 `profile.bash` (or `profile.zsh`) sources `bootstrap.sh` first, then runs
 one-time loaders (e.g., VeraCrypt). This ensures `DOTFILES_OS` is available
@@ -288,7 +290,7 @@ in `build/<shell>/opt/` and `build/<shell>/var/` (e.g., installed extensions
 or runtime state). Only derived files (etc/, home/, README.md seeds) are
 removed. The `build/` directory itself is only deleted if completely empty.
 
-Build scripts live in `libexec/` and are invoked via `Makefile`. Do not add a
+All tooling lives in `libexec/` and is invoked via `Makefile`. Do not add a
 `bin/` directory or put scripts on `$PATH`. `libexec/build` and `libexec/dist`
 share their core logic via `libexec/_common` (sourced, not executed).
 

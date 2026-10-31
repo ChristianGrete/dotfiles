@@ -84,6 +84,10 @@ git clone <url> build/bash/var/git/<repo>    # or: mkdir -p .../<repo>/src
 ln -s ../../../bash/var/git/<repo> build/zsh/var/git/<repo>
 ```
 
+Alternatively, keep the checkout elsewhere and link it into the Bash prefix
+(`ln -s /path/to/<repo> build/bash/var/git/<repo>`). The absolute link ties
+the prefix to that location, so it is no longer relocatable.
+
 ### 2. Fake build and dist
 
 ```bash
@@ -145,3 +149,4 @@ are needed. There is no OS check in the extension mechanism.
   ends the extension file.
 - Extensions load after the core modules (functions, aliases, completions,
   prompt), so they may rely on the core API, including `__dotfiles_*` helpers.
+- Only the rc files load extensions; the profile files (login shells) do not.
