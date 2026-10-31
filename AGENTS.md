@@ -372,7 +372,8 @@ targeting `main` and on manual dispatch. The required job *Lint and Build* runs
 `make lint`, `make build`, `make smoke`, and `make test` on `ubuntu-latest`
 with Zsh installed (a world-writable `/media` enables the loader tests). The
 informational job *Build and Test (macOS)* runs build, smoke, and test on
-`macos-latest` with the system Bash 3.2 first in `PATH`.
+`macos-latest` with the system Bash 3.2 first in `PATH`. A new push to the same
+pull request cancels its runs still in progress.
 
 The `.github/workflows/release.yml` workflow (manual `workflow_dispatch`, with a
 `patch`/`minor`/`major` input) runs the release orchestrator. It restores the

@@ -37,6 +37,9 @@ New behavior comes with tests; see "Tests" in [`AGENTS.md`][repository-agents-ur
 - `src/bash/`, `src/zsh/` — shell-specific code.
 - `functions.d/*_linux.sh` / `*_darwin.sh` — OS-specific modules, dispatched by
   filename; a plain `*.sh` loads everywhere.
+- `test/` — the test suite, one file per topic; `*.sh` runs in both shells,
+  `*.bash` / `*.zsh` in one.
+- `libexec/` — the commands behind the `make` targets.
 
 See [`AGENTS.md`][repository-agents-url] for the full layout, build process, and load order.
 
@@ -47,20 +50,30 @@ See [`AGENTS.md`][repository-agents-url] for the full layout, build process, and
 - Quote fixed string literals for clarity: `> '/dev/null'`, `command -v 'git'`.
 - Prefer `printf` over `echo`; use the `command` prefix inside functions that
   may be shadowed by an alias.
+- Messages: `printf 'func: lowercase message.\n'`, errors to stderr, no
+  `Error:` labels; see "User-Facing Output" in
+  [`AGENTS.md`][repository-agents-url].
 - US English throughout; ASCII only in code and code blocks.
 - Internal, non-public names use the `__dotfiles_` prefix.
 - File modes: `755` only for the executable `libexec/` commands; everything
-  else (sourced modules, data, docs) is `644`.
+  else (sourced modules, tests, data, docs) is `644`.
+
+`make lint` enforces the mechanical parts: ASCII, final newlines, trailing
+whitespace, and file modes.
 
 ## Commits and pull requests
 
 - Use Conventional Commits with a scope, e.g. `feat(completions): ...`,
   `fix(release): ...`, `docs(*): ...`.
 - `main` is protected: land changes through a pull request, sign your commits,
-  and make sure CI (`make lint`, `make build`, `make smoke`, `make test`)
-  passes.
+  and make sure the required check *Lint and Build* (`make lint`, `make build`,
+  `make smoke`, `make test` on Ubuntu) passes. *Build and Test (macOS)* runs
+  alongside with the system Bash 3.2 for information.
+- Dependabot opens monthly `ci(deps): ...` pull requests for the pinned
+  GitHub Actions.
 - Do not edit `VERSION` by hand — it is bumped by tooling. Releases are
-  automated via the Release workflow (SemVer, signed tag, generated changelog).
+  automated via the Release workflow from `main` (SemVer, signed tag,
+  generated changelog).
 
 ## License
 
