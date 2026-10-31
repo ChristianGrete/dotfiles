@@ -25,7 +25,8 @@ if [[ "$DOTFILES_OS" == 'linux' ]]; then
 fi
 
 # Show system info on terminal startup (skip in VS Code's integrated terminal).
-if [[ "$TERM_PROGRAM" != 'vscode' ]] && command -v 'fastfetch' > '/dev/null' 2>&1; then
+# Bash also reads ~/.bashrc for "ssh host cmd", where output breaks scp/rsync.
+if [[ $- == *i* && "$TERM_PROGRAM" != 'vscode' ]] && command -v 'fastfetch' > '/dev/null' 2>&1; then
   fastfetch
   printf '\n'
 fi

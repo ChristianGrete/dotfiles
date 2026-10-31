@@ -15,7 +15,7 @@ dotfiles_build() {
   for shell in bash zsh; do
     printf 'Building %s/%s...\n' "$target" "$shell"
 
-    # etc/ and home/ are fully derived — safe to recreate from scratch.
+    # etc/ and home/ are fully derived; safe to recreate from scratch.
     rm -rf "${out:?}/$shell/etc" "${out:?}/$shell/home"
 
     # Merge shared/etc/ as base, then overlay shell-specific etc/ on top.

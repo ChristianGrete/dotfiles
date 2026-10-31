@@ -3,6 +3,9 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
+# Hidden entries count as content, too.
+shopt -s dotglob
+
 has_extra_content() {
   local dir="$1"
 
@@ -10,7 +13,7 @@ has_extra_content() {
 
   local entry
   for entry in "$dir"/*; do
-    [[ -e "$entry" ]] || continue
+    [[ -e "$entry" || -L "$entry" ]] || continue
     [[ "$(basename "$entry")" == 'README.md' ]] && continue
     return 0
   done
@@ -19,10 +22,10 @@ has_extra_content() {
 }
 
 for shell in bash zsh; do
-  # etc/ and home/ are fully derived — always safe to delete.
+  # etc/ and home/ are fully derived; always safe to delete.
   rm -rf "$REPO_DIR/build/$shell/etc" "$REPO_DIR/build/$shell/home"
 
-  # opt/ and var/ — only remove README.md, preserve everything else.
+  # opt/ and var/: only remove README.md, preserve everything else.
   for dir in opt var; do
     target="$REPO_DIR/build/$shell/$dir"
 

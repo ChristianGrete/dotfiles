@@ -18,6 +18,12 @@ if [[ "$level" != 'patch' && "$level" != 'minor' && "$level" != 'major' ]]; then
   exit 1
 fi
 
+# The final reset --hard would discard uncommitted changes to tracked files.
+if [[ -n "$(git -C "$REPO_DIR" status --porcelain --untracked-files=no)" ]]; then
+  printf 'release: uncommitted changes, commit or stash them first.\n' >&2
+  exit 1
+fi
+
 # 1. Bump VERSION and read the resulting SemVer.
 "$REPO_DIR/libexec/bump" "$level"
 version="$(< "$REPO_DIR/VERSION")"

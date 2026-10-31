@@ -32,12 +32,12 @@ entries="$("$REPO_DIR/libexec/changelog")"
 
 section="## [$version] - $date"$'\n\n'"$entries"
 
-# Insert the new section immediately after the [Unreleased] heading.
-awk -v block="$section" '
+# Insert after [Unreleased]; ENVIRON, unlike awk -v, keeps backslashes intact.
+block="$section" awk '
   { print }
   /^## \[Unreleased\]/ && !done {
     print ""
-    print block
+    print ENVIRON["block"]
     done = 1
   }
 ' "$CHANGELOG_FILE" > "${CHANGELOG_FILE}.tmp"

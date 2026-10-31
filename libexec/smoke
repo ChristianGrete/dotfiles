@@ -8,7 +8,8 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 # this stays useful on machines without zsh while CI still exercises both.
 #
 # The shell must be interactive (-i) or completions.bash returns early via its
-# own guard. TERM_PROGRAM=vscode suppresses fastfetch during the run.
+# own guard. TERM_PROGRAM=vscode suppresses fastfetch during the run, and stdin
+# from /dev/null keeps the VeraCrypt loader from prompting.
 
 smoke_bash() {
   local prefix="$REPO_DIR/build/bash"
@@ -29,7 +30,7 @@ smoke_bash() {
     alias gb > "/dev/null" 2>&1          || fail "gb alias missing (aliases)"
     complete -p gp > "/dev/null" 2>&1    || fail "gp completion missing (completions)"
     declare -F __dotfiles_prompt_command > "/dev/null" || fail "prompt not set up"
-  ' || return 1
+  ' < '/dev/null' || return 1
 
   printf 'smoke: bash ok.\n'
 }
@@ -58,7 +59,7 @@ smoke_zsh() {
     alias gb > "/dev/null" 2>&1                   || fail "gb alias missing (aliases)"
     (( $+functions[compdef] ))                    || fail "compinit did not run (completions)"
     (( $+functions[__dotfiles_prompt_precmd] ))   || fail "prompt not set up"
-  ' || return 1
+  ' < '/dev/null' || return 1
 
   printf 'smoke: zsh ok.\n'
 }

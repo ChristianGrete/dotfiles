@@ -8,6 +8,11 @@ __dotfiles_loader_veracrypt() {
   local -a __dotfiles_loader_mounts=()
   local __dotfiles_loader_traps=false
 
+  # Only ask a user at a terminal; scripted shells (e.g., smoke tests) skip.
+  if [[ ! -t 0 ]] || ! { : < '/dev/tty'; } 2> '/dev/null'; then
+    return 0
+  fi
+
   # Zsh binds EXIT traps set in functions to the function; keep them global.
   if [[ -n "$ZSH_VERSION" && ! -o 'posix_traps' ]]; then
     __dotfiles_loader_traps=true
@@ -22,9 +27,9 @@ __dotfiles_loader_veracrypt() {
     __dotfiles_loader_file="${__dotfiles_loader_dir}/${__dotfiles_loader_target}"
     [[ -r "$__dotfiles_loader_file" ]] || continue
 
-    printf 'veracrypt: source %s? [y/N] ' "$__dotfiles_loader_file"
+    printf 'veracrypt: source %s? [y/N] ' "$__dotfiles_loader_file" > '/dev/tty'
     read -r __dotfiles_loader_answer < '/dev/tty'
-    printf '\n'
+    printf '\n' > '/dev/tty'
     [[ "$__dotfiles_loader_answer" == [yY] ]] || continue
 
     export __DOTFILES_LOADER_VERACRYPT_PATH="$__dotfiles_loader_dir"

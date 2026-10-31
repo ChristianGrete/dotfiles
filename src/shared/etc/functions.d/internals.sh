@@ -11,7 +11,7 @@ __dotfiles_prompt_git_state() {
 
   # Any untracked files -> orange.
   local untracked
-  untracked="$(command git ls-files --others --exclude-standard 2> '/dev/null' | head -n 1)"
+  untracked="$(command git ls-files --others --exclude-standard 2> '/dev/null' | command head -n 1)"
   [[ -n "$untracked" ]] && return 2
 
   # Only staged/uncommitted changes -> green.

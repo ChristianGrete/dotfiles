@@ -187,7 +187,9 @@ Loaders run last because they may depend on all preceding modules.
 
 **VeraCrypt volume dotfiles.** A volume mounted at `/media/veracrypt*` may
 provide a dotfile at its root, which the loader offers to source after a
-`[y/N]` prompt. `$__DOTFILES_LOADER_VERACRYPT_PATH` holds the mount point during
+`[y/N]` prompt. The prompt is shown only when stdin is a terminal; scripted
+shells such as `make smoke` skip all volumes.
+`$__DOTFILES_LOADER_VERACRYPT_PATH` holds the mount point during
 that call only. The file is sourced inside a function and thus runs in its local
 scope: `declare`, `typeset`, and `local` create loader-local variables. Use
 `typeset -g` for anything that must persist. Loader locals are `__dotfiles_`
@@ -410,9 +412,9 @@ a unified `printf` convention:
 - All files use two-space indentation (per `.editorconfig`), except the
   `Makefile`, which uses tabs as required by make.
 - Only the executable `libexec/` commands are `755` (`build`, `bump`,
-  `changelog`, `clean`, `dist`, `install`, `release`, `stamp`). Everything else
-  — sourced `src/` modules, `libexec/_common`, data files, and READMEs — is
-  `644`.
+  `changelog`, `clean`, `dist`, `install`, `release`, `smoke`, `stamp`).
+  Everything else — sourced `src/` modules, `libexec/_common`, data files, and
+  READMEs — is `644`.
 
 ### Internal Naming
 

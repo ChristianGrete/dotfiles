@@ -134,9 +134,9 @@ are needed. There is no OS check in the extension mechanism.
 ## Loading
 
 - `rc.bash` / `rc.zsh` iterate `$DOTFILES_EXTENSIONS/*` (set by the core to
-  `$DOTFILES/var/dotfiles/extensions.d`) in order and
-  source the entry point of each enabled extension (shell-specific first,
-  then `extension.sh`). Entries without a readable entry point are skipped.
+  `$DOTFILES/var/dotfiles/extensions.d`) in order and source the entry point
+  of each enabled extension (shell-specific first, then `extension.sh`).
+  Entries without a readable entry point are skipped.
 - Sourcing happens at the top level of the rc file, not inside a function.
   Extensions therefore behave exactly like code in `~/.bashrc` / `~/.zshrc`:
   `declare` and `typeset` create globals, traps are global, and `return` only

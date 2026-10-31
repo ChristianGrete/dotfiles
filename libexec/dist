@@ -20,7 +20,7 @@ if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exit 1
 fi
 
-# dist/ is a pristine release artifact — always rebuild from scratch.
+# dist/ is a pristine release artifact; always rebuild from scratch.
 rm -rf "$REPO_DIR/dist"
 
 dotfiles_build "$REPO_DIR" 'dist' "$version"

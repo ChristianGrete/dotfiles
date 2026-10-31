@@ -1,3 +1,4 @@
+# Dynamic text goes through psvar (%Nv), so zsh never expands its contents.
 __dotfiles_prompt_precmd() {
   local out state br sign
 
@@ -6,12 +7,15 @@ __dotfiles_prompt_precmd() {
   __dotfiles_prompt_sep=$'\n'
 
   # Compute display path for length check (replicates %~ behavior).
-  local display_pwd="${PWD/#$HOME/~}"
+  local display_pwd="$PWD"
+  if [[ "$PWD" == "$HOME" || "$PWD" == "$HOME/"* ]]; then
+    display_pwd="~${PWD#"$HOME"}"
+  fi
 
   # Non-printing sequences must be wrapped in %{...%} for zsh.
   local c_reset=$'%{\033[0m%}'
   local c_dim=$'%{\033[2m%}'
-    local c_dim_bold=$'%{\033[2;1m%}'
+  local c_dim_bold=$'%{\033[2;1m%}'
 
   # Git segment (optional).
   local git_line=""
@@ -19,6 +23,7 @@ __dotfiles_prompt_precmd() {
   if [[ -n "$out" ]]; then
     local IFS=$'\t'
     read -r state br <<< "$out"
+    psvar[3]="$br"
 
     local c_green=$'%{\033[32m%}'
     local c_orange=$'%{\033[33m%}'
@@ -26,10 +31,10 @@ __dotfiles_prompt_precmd() {
     local c_bold=$'%{\033[1m%}'
 
     case "$state" in
-      0) git_line="${c_dim}└── ${c_dim_bold}${br}${c_reset}" ;;
-      1) git_line="${c_dim}└── ${c_reset}${c_green}${c_bold}${br}${c_reset}" ;;
-      2) git_line="${c_dim}└── ${c_reset}${c_orange}${c_bold}${br}${c_reset}" ;;
-      3) git_line="${c_dim}└── ${c_reset}${c_red}${c_bold}${br}${c_reset}" ;;
+      0) git_line="${c_dim}└── ${c_dim_bold}%3v${c_reset}" ;;
+      1) git_line="${c_dim}└── ${c_reset}${c_green}${c_bold}%3v${c_reset}" ;;
+      2) git_line="${c_dim}└── ${c_reset}${c_orange}${c_bold}%3v${c_reset}" ;;
+      3) git_line="${c_dim}└── ${c_reset}${c_red}${c_bold}%3v${c_reset}" ;;
     esac
   fi
 
@@ -52,8 +57,9 @@ __dotfiles_prompt_precmd() {
       pwd_parent+="/"
     fi
 
-
-    PROMPT="${sep}${c_dim}${pwd_parent}${c_reset}${c_dim_bold}${pwd_tail}${c_reset}"
+    psvar[1]="$pwd_parent"
+    psvar[2]="$pwd_tail"
+    PROMPT="${sep}${c_dim}%1v${c_reset}${c_dim_bold}%2v${c_reset}"
     [[ -n "$git_line" ]] && PROMPT+=$'\n'"${git_line}"
     PROMPT+=$'\n\n'"${c_dim}${sign}${c_reset} "
   fi
