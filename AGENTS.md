@@ -34,6 +34,7 @@ dotfiles/
   README.md             # Project overview
   VERSION               # Single source of truth for the release SemVer
   .github/
+    dependabot.yml      # Monthly update PRs for the pinned GitHub Actions
     workflows/
       check.yml         # CI: lint + build + smoke on pull requests to main
       release.yml       # Release: bump, changelog, dist, sign-tag, publish
@@ -296,7 +297,10 @@ but differ in intent:
 ### Release Process (Model B: tagged dist, clean main)
 
 Releases are orchestrated by `libexec/release <level>`, which runs locally and
-is wrapped by a `workflow_dispatch` GitHub Action. The orchestrator:
+is wrapped by a `workflow_dispatch` GitHub Action. It refuses to start unless
+the working tree is clean, the current branch is `main`, and the new tag does
+not exist yet. Any later failure rolls the branch back to its starting commit.
+The orchestrator:
 
 1. Bumps `VERSION` (`libexec/bump`).
 2. Stamps `CHANGELOG.md` with the new version and commits since the last tag
@@ -323,7 +327,12 @@ The `.github/workflows/release.yml` workflow (manual `workflow_dispatch`, with a
 `patch`/`minor`/`major` input) runs the release orchestrator. It restores the
 SSH signing key from the `SIGNING_KEY` secret and pushes as a repository admin
 via the `RELEASE_TOKEN` PAT — required because the `main` branch ruleset cannot
-grant a bypass to the default `GITHUB_TOKEN`.
+grant a bypass to the default `GITHUB_TOKEN`. The job only runs on `main`, one
+release at a time, in the `release` environment that holds both secrets.
+
+All actions are pinned to full commit SHAs (with the version as a comment), and
+`check.yml` runs with a read-only token. Dependabot keeps the pins current via
+monthly `ci(deps): ...` pull requests.
 
 ## Code Conventions
 
@@ -465,3 +474,8 @@ These are documented for context only. Do not build any of this:
 - **Cloneless install:** Fetch a published release artifact and install it
   without cloning the repository. Currently `make install` requires a local
   clone.
+- **Single-call git prompt (only if the prompt ever feels slow):** Replace the
+  four to five `git` calls per prompt (`symbolic-ref`, `rev-parse`, two
+  `diff --quiet`, `ls-files --others`) with one
+  `git status --porcelain=v2 --branch` and parse branch, staged, unstaged, and
+  untracked state from its output. Measure in a large repository first.

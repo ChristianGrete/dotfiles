@@ -24,9 +24,32 @@ if [[ -n "$(git -C "$REPO_DIR" status --porcelain --untracked-files=no)" ]]; the
   exit 1
 fi
 
+branch="$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD)"
+
+if [[ "$branch" != 'main' ]]; then
+  printf 'release: releases are cut from main only, current branch: %s\n' "$branch" >&2
+  exit 1
+fi
+
+start_commit="$(git -C "$REPO_DIR" rev-parse HEAD)"
+tagged=false
+
+# The tree was clean, so resetting to the start only undoes this script's work.
+rollback() {
+  [[ "$tagged" == true ]] && git -C "$REPO_DIR" tag -d "v$version" > '/dev/null'
+  git -C "$REPO_DIR" reset -q --hard "$start_commit"
+  printf 'release: failed, rolled back to %s\n' "$start_commit" >&2
+}
+trap rollback EXIT
+
 # 1. Bump VERSION and read the resulting SemVer.
 "$REPO_DIR/libexec/bump" "$level"
 version="$(< "$REPO_DIR/VERSION")"
+
+if git -C "$REPO_DIR" rev-parse -q --verify "refs/tags/v$version" > '/dev/null'; then
+  printf 'release: tag already exists: v%s\n' "$version" >&2
+  exit 1
+fi
 
 # 2. Stamp CHANGELOG.md with the new version and commits since the last tag.
 "$REPO_DIR/libexec/stamp" "$version"
@@ -45,10 +68,13 @@ git -C "$REPO_DIR" commit -m "build(dist): v$version"
 
 # 6. Sign-tag the build commit.
 git -C "$REPO_DIR" tag -s "v$version" -m "release(tag): $version"
+tagged=true
 
 # 7. Reset the branch back to the source commit. The build commit survives as a
 #    dangling commit referenced only by the tag, keeping the branch clean.
 git -C "$REPO_DIR" reset --hard "$release_commit"
 
-printf 'release: tagged v%s on the branch %s.\n' "$version" "$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD)"
+trap - EXIT
+
+printf 'release: tagged v%s on the branch %s.\n' "$version" "$branch"
 printf 'release: push the branch and the tag to publish.\n'
