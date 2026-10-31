@@ -63,6 +63,32 @@ test_prompt_abbreviates_home_at_path_boundaries_only() {
   assert_eq "$__dotfiles_prompt_tail" 'sub'
 }
 
+test_prompt_embeds_escaped_text_without_promptvars() {
+  shopt -u promptvars
+  mkdir 'a\u$(touch pwned)'
+  cd 'a\u$(touch pwned)' || fail 'cd failed.'
+  __prompt_branch='b\u'
+
+  __dotfiles_prompt_command
+
+  assert_contains "$PS1" 'a\\u$(touch pwned)'
+  assert_contains "$PS1" 'b\\u'
+  [[ "$PS1" != *'__dotfiles_prompt_'* ]] || fail 'PS1 references variables.'
+}
+
+test_prompt_shows_names_literally_without_promptvars() {
+  __prompt_require_render
+  shopt -u promptvars
+  mkdir 'a\u$(touch pwned)'
+  cd 'a\u$(touch pwned)' || fail 'cd failed.'
+
+  __dotfiles_prompt_command
+  rendered="$(__prompt_render)"
+
+  [[ ! -e 'pwned' ]] || fail 'the prompt executed a name.'
+  assert_contains "$rendered" '/a\u$(touch pwned)'
+}
+
 test_prompt_is_compact_at_home() {
   HOME="$PWD"
 

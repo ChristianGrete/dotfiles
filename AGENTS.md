@@ -186,8 +186,8 @@ before any loader that needs it. Since sourcing `bootstrap.sh` twice is safe
 and cheap, running it in both profile and rc costs nothing.
 
 The profile files also print a separating newline after the OS login message
-(e.g., macOS "Last login:") unless `~/.hushlogin` exists. This check runs
-before `bootstrap.sh` since it has no dependencies.
+(e.g., macOS "Last login:") in interactive shells, unless `~/.hushlogin`
+exists. This check runs before `bootstrap.sh` since it has no dependencies.
 
 This order matters: aliases reference functions, so functions must load first.
 Extensions load after the core modules so they may rely on the core API.

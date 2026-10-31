@@ -1,5 +1,5 @@
-# Separate login message from subsequent output.
-if [[ ! -e "$HOME/.hushlogin" ]]; then
+# Separate login message from subsequent output (not in scripts like bash -lc).
+if [[ $- == *i* && ! -e "$HOME/.hushlogin" ]]; then
   printf '\n'
 fi
 

@@ -25,10 +25,15 @@ make install
 
 This builds a local test artifact and links it from the current directory into the [data directory](https://docs.rs/dirs/latest/dirs/fn.data_dir.html). Any remaining steps are then printed in the terminal.
 
+### Development
+
+`make test` runs the test suite in Bash and Zsh, and `make sandbox` runs every check in a disposable container. See the [contributing guide][repository-contributing-url] for the full workflow.
+
 ---
 
 Copyright © 2015-2026 ([MIT][repository-license-url]) [Christian Grete][repository-owner-url]
 
+[repository-contributing-url]: CONTRIBUTING.md
 [repository-github-url]: https://github.com/ChristianGrete/dotfiles
 [repository-license-url]: LICENSE
 [repository-owner-url]: https://christiangrete.com
