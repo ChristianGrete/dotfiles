@@ -36,7 +36,7 @@ dotfiles/
   .github/
     dependabot.yml      # Monthly update PRs for the pinned GitHub Actions
     workflows/
-      check.yml         # CI: lint + build + smoke on pull requests to main
+      check.yml         # CI: lint, build, smoke, test (Ubuntu); build, smoke, test (macOS)
       release.yml       # Release: bump, changelog, dist, sign-tag, publish
   libexec/              # Build and install scripts (not user-facing)
     _common             # Shared build logic sourced by build and dist
@@ -46,9 +46,12 @@ dotfiles/
     clean               # Selectively cleans build/ (preserves opt/var contents)
     dist                # Merges src/ into dist/ (release build, SemVer version)
     install             # Symlinks build/<shell>/ into the OS install location
+    lint                # ShellCheck, syntax checks, and repository conventions
     release             # Orchestrates a release (bump, stamp, dist, commit, tag)
+    sandbox             # Runs lint, build, smoke, test in a disposable container
     smoke               # Loads the built prefix in each shell, asserts its API
     stamp               # Stamps a release section into CHANGELOG.md
+    test                # Runs test/ against the built prefix in each shell
   src/
     shared/             # Shell-agnostic code (valid in both bash and zsh)
       etc/              # Internal modules sourced by rc.bash / rc.zsh
@@ -97,6 +100,10 @@ dotfiles/
       home/
         rc.zsh          # Entry point for interactive shells
         profile.zsh     # Entry point for login shells
+  test/                 # Test suite, flat: one file per topic (see Tests)
+    _harness.sh         # Assertions and runner, sourced into each test shell
+    *.sh                # Tests for both shells
+    *.bash / *.zsh      # Tests for one shell only
   build/                # Gitignored. Never edit files here manually.
     bash/               # Merged prefix: shared + bash-specific
     zsh/                # Merged prefix: shared + zsh-specific
@@ -175,8 +182,8 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 
 `profile.bash` (or `profile.zsh`) sources `bootstrap.sh` first, then runs
 one-time loaders (e.g., VeraCrypt). This ensures `DOTFILES_OS` is available
-before any loader that needs it. Since `bootstrap.sh` is self-guarded, sourcing
-it in both profile and rc is safe and incurs no extra cost.
+before any loader that needs it. Since sourcing `bootstrap.sh` twice is safe
+and cheap, running it in both profile and rc costs nothing.
 
 The profile files also print a separating newline after the OS login message
 (e.g., macOS "Last login:") unless `~/.hushlogin` exists. This check runs
@@ -264,8 +271,10 @@ interactive use.
 
 ```
 make build              # Merge src/ into build/bash/ and build/zsh/ (dev)
-make lint               # ShellCheck + syntax checks (bash -n, zsh -n)
+make lint               # ShellCheck, bash -n, zsh -n, and repository conventions
 make smoke              # Load the built prefix in each shell and assert its API
+make test               # Build, then run test/ in Bash and Zsh (see Tests)
+make sandbox            # Run lint, build, smoke, test in a disposable container
 make install            # Symlink build/<shell>/ to OS install location
 make clean              # Selectively clean build/ (preserves opt/var contents)
 make bump LEVEL=patch   # Bump VERSION (patch/minor/major)
@@ -282,6 +291,45 @@ removed. The `build/` directory itself is only deleted if completely empty.
 Build scripts live in `libexec/` and are invoked via `Makefile`. Do not add a
 `bin/` directory or put scripts on `$PATH`. `libexec/build` and `libexec/dist`
 share their core logic via `libexec/_common` (sourced, not executed).
+
+`make lint` also enforces the conventions below on every tracked or new file:
+ASCII only (Markdown and the prompt glyph excepted), a final newline, no
+trailing whitespace outside Markdown, and the executable bit on `libexec/`
+commands only.
+
+## Tests
+
+`make test` runs `test/` against the built prefix: `test/*.sh` in Bash and Zsh,
+`test/*.bash` and `test/*.zsh` only in their shell (Zsh is skipped when
+absent). Each file gets a fresh interactive shell with `rc.<shell>` loaded and
+stdin from `/dev/null`. Anything that shell writes to stderr outside a test
+fails the file, which also catches noisy modules.
+
+`make sandbox` runs lint, build, smoke, and test in a disposable Fedora
+container (podman, or docker as a fallback) with both shells. The repository is
+mounted read-only and copied inside, so the host's `build/` stays untouched.
+As root, the sandbox also runs the tests that need it (the VeraCrypt loader
+under `/media`); locally they are skipped.
+
+Writing tests:
+
+- A test is a function named `test_<topic>_<behavior>` defined at the start of
+  a line. Tests run in definition order, each in its own subshell with a fresh
+  `$TEST_TMP` as working directory. Exit status 0 passes, 77 skips, anything
+  else fails, so the last command must succeed.
+- Helpers from `test/_harness.sh`: `assert_eq ACTUAL EXPECTED`,
+  `assert_contains ACTUAL PART`, `fail MESSAGE`, `skip REASON`, `run_shell`
+  (runs a script from stdin in a fresh, non-interactive shell of the tested
+  kind), and `isolate_git` (empty git config and a fixed identity; always use
+  it before running git, so no test touches the user's setup).
+- File-local helpers use a `__<topic>_` prefix, never `test_`.
+- Capture output and status separately: `out="$(cmd 2>&1)"`, then
+  `assert_eq "$?" '1'`. `local out="$(cmd)"` would lose the status.
+- `*.sh` tests follow the `src/shared/` rules: no Zsh special parameter names
+  (`status`, `path`, ...) and no globs that may match nothing.
+- Gate platform- or privilege-specific tests with `skip` (e.g.,
+  `[[ "$DOTFILES_OS" == 'linux' ]] || skip 'linux only.'`). Never touch real
+  user data; tests work in `$TEST_TMP` or throwaway clones only.
 
 ## Build vs. Dist
 
@@ -320,8 +368,11 @@ tooling — never edit it by hand.
 ## CI
 
 The GitHub Actions workflow `.github/workflows/check.yml` runs on pull requests
-targeting `main` and on manual dispatch. It runs `make lint`, `make build`, then
-`make smoke` on `ubuntu-latest` with Zsh installed.
+targeting `main` and on manual dispatch. The required job *Lint and Build* runs
+`make lint`, `make build`, `make smoke`, and `make test` on `ubuntu-latest`
+with Zsh installed (a world-writable `/media` enables the loader tests). The
+informational job *Build and Test (macOS)* runs build, smoke, and test on
+`macos-latest` with the system Bash 3.2 first in `PATH`.
 
 The `.github/workflows/release.yml` workflow (manual `workflow_dispatch`, with a
 `patch`/`minor`/`major` input) runs the release orchestrator. It restores the
@@ -404,26 +455,35 @@ a unified `printf` convention:
 - **Lowercase after the prefix.** No `Error:` or `Warning:` labels — the stderr
   routing and exit code convey severity.
 - **Errors go to stderr (`>&2`).** Informational/progress output goes to stdout.
+- **Punctuation:** sentences end with a period; a message ending in a dynamic
+  value (`: %s`) takes none; progress ends with `...`; a header introducing a
+  list ends with a colon.
 - **Indented sub-output is fine** for detail lines beneath a header message:
-  `printf '  source: %s\n' "$hash" >&2`. These do not need the function prefix.
+  `printf '  expected: %s\n' "$expected" >&2`. These do not need the function
+  prefix.
+- **Invalid arguments:** print `func: invalid arguments.`, then
+  `  usage: func ARGS` lines on stderr, and return 1.
+- **Prompts** are shown only when stdin is a terminal, written to and read from
+  `/dev/tty`, without a trailing newline.
 - **Data-only output** (consumed by other functions or prompts) uses plain
   `printf '%s' "$value"` without decoration or newline, unless the consumer
   expects newline-delimited records.
 
 ### File Extensions
 
-- `.sh` — shell-agnostic (bash + zsh compatible). Used in `src/shared/`.
-- `.bash` — bash-specific. Used in `src/bash/`.
-- `.zsh` — zsh-specific. Used in `src/zsh/`.
+- `.sh` — shell-agnostic (bash + zsh compatible). Used in `src/shared/` and
+  `test/`.
+- `.bash` — bash-specific. Used in `src/bash/` and `test/`.
+- `.zsh` — zsh-specific. Used in `src/zsh/` and `test/`.
 
 ### Formatting and File Modes
 
 - All files use two-space indentation (per `.editorconfig`), except the
   `Makefile`, which uses tabs as required by make.
 - Only the executable `libexec/` commands are `755` (`build`, `bump`,
-  `changelog`, `clean`, `dist`, `install`, `release`, `smoke`, `stamp`).
-  Everything else — sourced `src/` modules, `libexec/_common`, data files, and
-  READMEs — is `644`.
+  `changelog`, `clean`, `dist`, `install`, `lint`, `release`, `sandbox`,
+  `smoke`, `stamp`, `test`). Everything else — sourced `src/` modules,
+  `libexec/_common`, `test/` files, data files, and READMEs — is `644`.
 
 ### Internal Naming
 

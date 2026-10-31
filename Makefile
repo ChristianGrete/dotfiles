@@ -1,4 +1,4 @@
-.PHONY: build bump changelog clean dist install lint release smoke
+.PHONY: build bump changelog clean dist install lint release sandbox smoke test
 
 build:
 	@libexec/build
@@ -19,17 +19,16 @@ install: build
 	@libexec/install
 
 lint:
-	@shellcheck libexec/*
-	@find src -name '*.sh' -o -name '*.bash' | sort | xargs shellcheck
-	@if command -v bash > /dev/null 2>&1; then \
-		find src -name '*.sh' -o -name '*.bash' | sort | xargs -I{} bash -n {}; \
-	fi
-	@if command -v zsh > /dev/null 2>&1; then \
-		find src -name '*.zsh' -o -name '*.sh' | sort | xargs -I{} zsh -n {}; \
-	fi
+	@libexec/lint
 
 release:
 	@libexec/release $(LEVEL)
 
+sandbox:
+	@libexec/sandbox
+
 smoke:
 	@libexec/smoke
+
+test: build
+	@libexec/test

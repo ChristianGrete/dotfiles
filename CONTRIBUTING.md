@@ -11,6 +11,7 @@ architecture and conventions.
 - `make` (entry point for all tooling)
 - `shellcheck` (linting)
 - `zsh` (optional locally, required to exercise the Zsh path; CI runs both)
+- `podman` or `docker` (optional, for `make sandbox`)
 
 ## Development workflow
 
@@ -19,13 +20,16 @@ them by hand. Then:
 
 ```sh
 make build   # merge src/ into build/bash/ and build/zsh/
-make lint    # ShellCheck + bash -n / zsh -n
+make lint    # ShellCheck, bash -n / zsh -n, and repository conventions
 make smoke   # load the built prefix in each shell and assert its public API
+make test    # run the test suite (test/) in each shell
+make sandbox # all of the above in a disposable container, with Zsh and root
 make install # symlink the built prefix into place (prints the next steps)
 ```
 
-`make smoke` skips Zsh when it is not installed, so it stays useful on a
-Bash-only machine while CI exercises both shells.
+`make smoke` and `make test` skip Zsh when it is not installed, so they stay
+useful on a Bash-only machine; `make sandbox` and CI exercise both shells.
+New behavior comes with tests; see "Tests" in [`AGENTS.md`][repository-agents-url].
 
 ## Source layout
 
@@ -53,7 +57,8 @@ See [`AGENTS.md`][repository-agents-url] for the full layout, build process, and
 - Use Conventional Commits with a scope, e.g. `feat(completions): ...`,
   `fix(release): ...`, `docs(*): ...`.
 - `main` is protected: land changes through a pull request, sign your commits,
-  and make sure CI (`make lint`, `make build`, `make smoke`) passes.
+  and make sure CI (`make lint`, `make build`, `make smoke`, `make test`)
+  passes.
 - Do not edit `VERSION` by hand — it is bumped by tooling. Releases are
   automated via the Release workflow (SemVer, signed tag, generated changelog).
 

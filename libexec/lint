@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Lint the shell sources (ShellCheck, bash -n, zsh -n) and check the
+# repository-wide conventions from AGENTS.md: ASCII only, a final newline, no
+# trailing whitespace, and the executable bit on libexec commands only. Every
+# violation is reported; the exit status is non-zero if there was any.
+
+cd "$REPO_DIR"
+
+status=0
+
+violation() {
+  printf 'lint: %s\n' "$1" >&2
+  status=1
+}
+
+# Shell sources, including the test suite.
+shellcheck libexec/* || status=1
+
+find src test \( -name '*.sh' -o -name '*.bash' \) | sort | xargs shellcheck || status=1
+
+while IFS= read -r file; do
+  bash -n "$file" || status=1
+done < <(find src test \( -name '*.sh' -o -name '*.bash' \) | sort)
+
+if command -v 'zsh' > '/dev/null' 2>&1; then
+  while IFS= read -r file; do
+    zsh -n "$file" || status=1
+  done < <(find src test \( -name '*.sh' -o -name '*.zsh' \) | sort)
+fi
+
+# The prompt tree glyph is the only non-ASCII allowed outside Markdown.
+glyph="$(printf '\342\224\224\342\224\200\342\224\200')"
+non_ascii="$(printf '[\200-\377]')"
+
+while IFS= read -r file; do
+  [[ -f "$file" && ! -L "$file" ]] || continue
+
+  if [[ -s "$file" && -n "$(tail -c 1 "$file")" ]]; then
+    violation "missing final newline: $file"
+  fi
+
+  case "$file" in
+    *.md) ;;
+    *)
+      while IFS= read -r line; do
+        violation "trailing whitespace: $file:${line%%:*}"
+      done < <(grep -n '[[:blank:]]$' "$file" || true)
+
+      while IFS= read -r line; do
+        violation "non-ascii character: $file:${line%%:*}"
+      done < <(
+        case "$file" in
+          src/bash/etc/prompt.bash | src/zsh/etc/prompt.zsh) sed "s/$glyph//g" "$file" ;;
+          *) cat "$file" ;;
+        esac | LC_ALL=C grep -n "$non_ascii" || true
+      )
+      ;;
+  esac
+
+  case "$file" in
+    libexec/_*) [[ ! -x "$file" ]] || violation "unexpected executable bit: $file" ;;
+    libexec/*) [[ -x "$file" ]] || violation "missing executable bit: $file" ;;
+    *) [[ ! -x "$file" ]] || violation "unexpected executable bit: $file" ;;
+  esac
+done < <(git ls-files --cached --others --exclude-standard | sort -u)
+
+if [[ "$status" -ne 0 ]]; then
+  exit "$status"
+fi
+
+printf 'lint: all good.\n'

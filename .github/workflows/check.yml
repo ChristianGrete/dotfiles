@@ -30,3 +30,36 @@ jobs:
 
       - name: Smoke
         run: make smoke
+
+      # A world-writable /media lets the VeraCrypt loader tests run unprivileged.
+      - name: Test
+        run: |
+          sudo install -d -m 1777 /media
+          make test
+
+  check-macos:
+    name: Build and Test (macOS)
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The system Bash 3.2 is the worst case on a Mac.
+      - name: Prefer the system Bash
+        run: printf '/bin\n' >> "$GITHUB_PATH"
+
+      - name: Versions
+        run: |
+          bash --version | head -n 1
+          zsh --version
+
+      - name: Build
+        run: make build
+
+      - name: Smoke
+        run: make smoke
+
+      - name: Test
+        run: make test

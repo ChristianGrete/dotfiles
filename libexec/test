@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Run the test suite against the built prefix. test/*.sh runs in Bash and Zsh,
+# test/*.bash and test/*.zsh only in their shell; Zsh is skipped when absent.
+# Each file gets a fresh interactive shell (see test/_harness.sh). Stdin from
+# /dev/null keeps the VeraCrypt loader quiet, TERM_PROGRAM=vscode skips
+# fastfetch, and anything the shell writes to stderr outside of a test fails.
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+passed=0
+failed=0
+skipped=0
+
+run_file() {
+  local shell="$1"
+  local file="$2"
+  local p f s
+  local -a cmd=('bash' '--norc' '--noprofile')
+
+  [[ "$shell" == 'zsh' ]] && cmd=('zsh' '-f')
+
+  : > "$tmp/results"
+
+  # shellcheck disable=SC2016 # expanded by the test shell
+  TERM_PROGRAM='vscode' DOTFILES="$REPO_DIR/build/$shell" TEST_SHELL="$shell" \
+    TEST_FILE="$file" TEST_REPO="$REPO_DIR" TEST_RESULTS="$tmp/results" \
+    "${cmd[@]}" -i -c '. "$TEST_REPO/test/_harness.sh"' < '/dev/null' 2> "$tmp/stderr" || true
+
+  # Bash prints these when there is no terminal for job control (e.g., CI).
+  grep -v -e 'cannot set terminal process group' -e 'no job control in this shell' \
+    "$tmp/stderr" > "$tmp/unexpected" || true
+
+  if [[ -s "$tmp/unexpected" ]]; then
+    printf 'test: %s: %s: unexpected output on stderr:\n' "$shell" "${file##*/}" >&2
+    sed 's/^/  /' "$tmp/unexpected" >&2
+    failed=$((failed + 1))
+  fi
+
+  if ! read -r p f s < "$tmp/results"; then
+    printf 'test: %s: %s: the harness did not finish.\n' "$shell" "${file##*/}" >&2
+    failed=$((failed + 1))
+    return 0
+  fi
+
+  passed=$((passed + p))
+  failed=$((failed + f))
+  skipped=$((skipped + s))
+}
+
+for shell in bash zsh; do
+  if ! command -v "$shell" > '/dev/null' 2>&1; then
+    printf 'test: %s not installed; skipping.\n' "$shell"
+    continue
+  fi
+
+  if [[ ! -f "$REPO_DIR/build/$shell/home/rc.$shell" ]]; then
+    printf 'test: build/%s not found; run "make build" first.\n' "$shell" >&2
+    exit 1
+  fi
+
+  for file in "$REPO_DIR/test/"*.sh "$REPO_DIR/test/"*."$shell"; do
+    [[ -f "$file" && "${file##*/}" != _* ]] || continue
+    run_file "$shell" "$file"
+  done
+done
+
+if [[ "$failed" -gt 0 ]]; then
+  printf 'test: %d failed (%d passed, %d skipped).\n' "$failed" "$passed" "$skipped" >&2
+  exit 1
+fi
+
+printf 'test: all good (%d passed, %d skipped).\n' "$passed" "$skipped"
