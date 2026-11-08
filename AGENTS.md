@@ -220,6 +220,8 @@ Aliases do not inherit their target command's completion automatically, so the
   spec-clone for whole-command wrappers like `p`/`n`/`d`), rewires every alias,
   and returns `124` so readline retries with the installed completion. This
   lazy model mirrors bash-completion itself: no cost until the first `TAB`.
+  Bash 3.2 (the macOS system Bash) has no such retry, so there the first `TAB`
+  only loads the completions and the next one uses them.
 - **Zsh** (`completions.zsh`): With `complete_aliases` unset (the default) zsh
   expands an alias before completing it, so wrappers inherit completion for
   free once compsys is active. The module only runs `compinit` (guarded so it

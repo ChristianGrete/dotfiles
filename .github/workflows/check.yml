@@ -60,6 +60,13 @@ jobs:
           bash --version | head -n 1
           zsh --version
 
+      # Catches syntax only Bash 3.2 rejects, even in scripts not run here.
+      - name: Syntax
+        run: |
+          find libexec src test -type f \
+            \( -path 'libexec/*' -o -name '*.sh' -o -name '*.bash' \) -print0 |
+            xargs -0 -n 1 bash -n
+
       - name: Build
         run: make build
 
