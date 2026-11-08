@@ -1,5 +1,8 @@
 # shellcheck disable=SC2016
 
+# libexec/test sets vscode, which skips the separator; act like Terminal.app.
+export TERM_PROGRAM='Apple_Terminal'
+
 # Usage: __profile_load [-i]
 # Sources profile.<shell> in a fresh shell (interactive with -i) with $HOME set
 # to the test directory, then prints "end"; shows only what went to stdout.
@@ -24,4 +27,10 @@ test_profile_respects_hushlogin() {
 
 test_profile_is_silent_in_scripts() {
   assert_eq "$(__profile_load)" 'end'
+}
+
+test_profile_is_silent_in_vscode() {
+  export TERM_PROGRAM='vscode'
+
+  assert_eq "$(__profile_load -i)" 'end'
 }

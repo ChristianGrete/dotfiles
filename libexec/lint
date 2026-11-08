@@ -50,12 +50,13 @@ while IFS= read -r file; do
         violation "trailing whitespace: $file:${line%%:*}"
       done < <(grep -n '[[:blank:]]$' "$file" || true)
 
+      # Bash 3.2 needs the leading parens on the case patterns below.
       while IFS= read -r line; do
         violation "non-ascii character: $file:${line%%:*}"
       done < <(
         case "$file" in
-          src/bash/etc/prompt.bash | src/zsh/etc/prompt.zsh) sed "s/$glyph//g" "$file" ;;
-          *) cat "$file" ;;
+          (src/bash/etc/prompt.bash | src/zsh/etc/prompt.zsh) sed "s/$glyph//g" "$file" ;;
+          (*) cat "$file" ;;
         esac | LC_ALL=C grep -n "$non_ascii" || true
       )
       ;;

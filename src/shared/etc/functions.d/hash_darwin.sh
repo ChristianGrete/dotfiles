@@ -16,7 +16,12 @@ hash_compute() (
     return 1
   fi
 
-  hash="$(command shasum -a 256 < "$file")" || return $?
+  # Where available, sha256sum is several times faster than the Perl shasum.
+  if command -v 'sha256sum' > '/dev/null' 2>&1; then
+    hash="$(command sha256sum < "$file")" || return $?
+  else
+    hash="$(command shasum -a 256 < "$file")" || return $?
+  fi
   hash="${hash%% *}"
 
   # Never let a failed read pass as the hash of an empty stream.

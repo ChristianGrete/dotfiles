@@ -26,6 +26,17 @@ test_hash_compute_matches_the_reference() {
   assert_eq "$(hash_compute 'empty' 2> '/dev/null')" "$(__hash_ref 'empty')"
 }
 
+test_hash_compute_falls_back_to_shasum() {
+  [[ "$DOTFILES_OS" == 'darwin' ]] || skip 'darwin only.'
+  command -v 'shasum' > '/dev/null' 2>&1 || skip 'needs shasum.'
+
+  mkdir 'bin'
+  ln -s "$(command -v 'shasum')" 'bin/shasum'
+  head -c 12345 '/dev/urandom' > 'odd'
+
+  assert_eq "$(PATH="$PWD/bin" hash_compute 'odd')" "$(__hash_ref 'odd')"
+}
+
 test_hash_compute_rejects_a_missing_file() {
   out="$(hash_compute 'missing' 2>&1)"
   assert_eq "$?" '1'
