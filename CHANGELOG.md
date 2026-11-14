@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-14
+
+- fix(release): drop chmod that dirtied the tree (#9) (a2302c0)
+- feat(*)!: extensions, generic helpers, test suite, hardening (#8) (29fa557)
+
 ## [0.1.0] - 2026-07-31
 
 - chore(*): add smoke test, contrib guide + markdown typo polish (#7) (9c695be)
