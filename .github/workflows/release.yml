@@ -58,7 +58,6 @@ jobs:
         env:
           LEVEL: ${{ inputs.level }}
         run: |
-          chmod +x libexec/*
           libexec/changelog > "$RUNNER_TEMP/release_notes.md"
           libexec/release "$LEVEL"
 
