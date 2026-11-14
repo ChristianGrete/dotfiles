@@ -28,15 +28,17 @@ dotfiles/
   CHANGELOG.md          # Keep a Changelog format, updated on release
   CODEOWNERS            # Code owner (@ChristianGrete) for all paths
   CONTRIBUTING.md       # Contributor quick-start (points to this file)
+  EXTENSIONS.md         # Extension layout, entry points, and loading
   LICENSE               # MIT license
   Makefile              # Entry point for build tooling
   README.md             # Project overview
   VERSION               # Single source of truth for the release SemVer
   .github/
+    dependabot.yml      # Monthly update PRs for the pinned GitHub Actions
     workflows/
-      check.yml         # CI: lint + build + smoke on pull requests to main
+      check.yml         # CI: lint, build, smoke, test (Ubuntu); build, smoke, test (macOS)
       release.yml       # Release: bump, changelog, dist, sign-tag, publish
-  libexec/              # Build and install scripts (not user-facing)
+  libexec/              # Tooling behind the make targets (not user-facing)
     _common             # Shared build logic sourced by build and dist
     build               # Merges src/ into build/ (dev build, git hash version)
     bump                # Bumps VERSION (patch/minor/major)
@@ -44,14 +46,17 @@ dotfiles/
     clean               # Selectively cleans build/ (preserves opt/var contents)
     dist                # Merges src/ into dist/ (release build, SemVer version)
     install             # Symlinks build/<shell>/ into the OS install location
+    lint                # ShellCheck, syntax checks, and repository conventions
     release             # Orchestrates a release (bump, stamp, dist, commit, tag)
+    sandbox             # Runs lint, build, smoke, test in a disposable container
     smoke               # Loads the built prefix in each shell, asserts its API
     stamp               # Stamps a release section into CHANGELOG.md
+    test                # Runs test/ against the built prefix in each shell
   src/
     shared/             # Shell-agnostic code (valid in both bash and zsh)
       etc/              # Internal modules sourced by rc.bash / rc.zsh
         aliases.sh
-        bootstrap.sh    # Self-guarded DOTFILES_* exports (sourced first)
+        bootstrap.sh    # DOTFILES_* exports (sourced first)
         environment.sh
         functions.sh    # Sources functions.d/*.sh via shared loader
         loaders/        # Shared loader function definitions
@@ -60,20 +65,27 @@ dotfiles/
         functions.d/    # Individual function modules
           appledouble_linux.sh    # Loaded only on Linux
           brew_darwin.sh          # Loaded only on macOS (Darwin)
-          buffer_linux.sh         # Loaded only on Linux
-          internals.sh            # Always loaded
-          visual.sh               # Always loaded
+          file.sh                 # Always loaded
+          file_linux.sh           # Loaded only on Linux
           git.sh                  # Always loaded
-          keyfiles_linux.sh       # Loaded only on Linux
+          hash.sh                 # Always loaded
+          hash_darwin.sh          # Loaded only on macOS (Darwin)
+          hash_linux.sh           # Loaded only on Linux
+          internals.sh            # Always loaded (__dotfiles_* helpers)
+          internals_linux.sh      # Loaded only on Linux (__dotfiles_* helpers)
           keyfiles_darwin.sh      # Loaded only on macOS (Darwin)
+          keyfiles_linux.sh       # Loaded only on Linux
           utils.sh                # Always loaded
+          visual.sh               # Always loaded
+          volume.sh               # Always loaded
+          volume_linux.sh         # Loaded only on Linux
       opt/
-        README.md       # Seed for extension install surface (future use)
+        README.md       # Seed for extension install surface
       home/             # Shell-agnostic home artefacts
         Brewfile.rb     # Homebrew package list (macOS)
         default.gitconfig  # Git defaults (included by ~/.gitconfig)
       var/
-        README.md       # Seed for mutable runtime state (future use)
+        README.md       # Seed for mutable runtime state (cache, extensions.d, git)
     bash/               # Bash-specific sources
       etc/
         completions.bash  # Lazy alias completion wiring (bash-completion)
@@ -88,6 +100,10 @@ dotfiles/
       home/
         rc.zsh          # Entry point for interactive shells
         profile.zsh     # Entry point for login shells
+  test/                 # Test suite, flat: one file per topic (see Tests)
+    _harness.sh         # Assertions and runner, sourced into each test shell
+    *.sh                # Tests for both shells
+    *.bash / *.zsh      # Tests for one shell only
   build/                # Gitignored. Never edit files here manually.
     bash/               # Merged prefix: shared + bash-specific
     zsh/                # Merged prefix: shared + zsh-specific
@@ -134,7 +150,8 @@ The install script never modifies `~/.bashrc` or any other file in `$HOME`.
 
 ### Runtime Loading
 
-The user adds two lines to their shell RC file:
+The user adds two lines to their shell RC file (shown for Linux; `make install`
+prints the exact lines for the current OS):
 
 ```bash
 export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfiles"
@@ -150,27 +167,45 @@ export DOTFILES="${XDG_DATA_HOME:-$HOME/.local/share}/com.christiangrete.dotfile
 
 `rc.bash` (or `rc.zsh`) sources internal modules in deterministic order:
 
-1. `$DOTFILES/etc/bootstrap.sh` — self-guarded DOTFILES_OS, DOTFILES_SHELL, DOTFILES_VERSION
+1. `$DOTFILES/etc/bootstrap.sh` — DOTFILES_OS (guarded), DOTFILES_SHELL,
+   DOTFILES_VERSION, DOTFILES_EXTENSIONS (always reset, since a child shell may
+   run from another prefix)
 2. `$DOTFILES/etc/environment.sh` — exported variables
 3. `$DOTFILES/etc/functions.sh` — OS-aware function loader
 4. `$DOTFILES/etc/aliases.sh` — aliases (may reference functions)
 5. `$DOTFILES/etc/completions.bash` — lazy alias completion wiring (bash);
    `completions.zsh` runs `compinit` on zsh
 6. `$DOTFILES/etc/prompt.bash` — shell-specific prompt setup
-7. `$DOTFILES/etc/loaders/veracrypt.sh` — VeraCrypt dotfile sourcing (Linux only)
-8. `fastfetch` — system info on startup (skipped in VS Code terminal)
+7. `$DOTFILES_EXTENSIONS/*` — enabled extensions, sourced at
+   the top level (see [EXTENSIONS.md](EXTENSIONS.md))
+8. `$DOTFILES/etc/loaders/veracrypt.sh` — VeraCrypt dotfile sourcing (Linux only)
+9. `fastfetch` — system info on startup (interactive shells only, skipped in
+   the VS Code terminal)
 
 `profile.bash` (or `profile.zsh`) sources `bootstrap.sh` first, then runs
 one-time loaders (e.g., VeraCrypt). This ensures `DOTFILES_OS` is available
-before any loader that needs it. Since `bootstrap.sh` is self-guarded, sourcing
-it in both profile and rc is safe and incurs no extra cost.
+before any loader that needs it. Since sourcing `bootstrap.sh` twice is safe
+and cheap, running it in both profile and rc costs nothing.
 
 The profile files also print a separating newline after the OS login message
-(e.g., macOS "Last login:") unless `~/.hushlogin` exists. This check runs
-before `bootstrap.sh` since it has no dependencies.
+(e.g., macOS "Last login:") in interactive shells, unless `~/.hushlogin`
+exists or the shell runs in VS Code, which starts login shells without a login
+message. This check runs before `bootstrap.sh` since it has no dependencies.
 
 This order matters: aliases reference functions, so functions must load first.
+Extensions load after the core modules so they may rely on the core API.
 Loaders run last because they may depend on all preceding modules.
+
+**VeraCrypt volume dotfiles.** A volume mounted at `/media/veracrypt*` may
+provide a dotfile at its root, which the loader offers to source after a
+`[y/N]` prompt. The prompt is shown only when stdin is a terminal; scripted
+shells such as `make smoke` skip all volumes.
+`$__DOTFILES_LOADER_VERACRYPT_PATH` holds the mount point during
+that call only. The file is sourced inside a function and thus runs in its local
+scope: `declare`, `typeset`, and `local` create loader-local variables. Use
+`typeset -g` for anything that must persist. Loader locals are `__dotfiles_`
+prefixed, and EXIT traps fire on shell exit in both shells (the loader enables
+`posix_traps` on Zsh while sourcing).
 
 ### Shell Completion
 
@@ -185,6 +220,8 @@ Aliases do not inherit their target command's completion automatically, so the
   spec-clone for whole-command wrappers like `p`/`n`/`d`), rewires every alias,
   and returns `124` so readline retries with the installed completion. This
   lazy model mirrors bash-completion itself: no cost until the first `TAB`.
+  Bash 3.2 (the macOS system Bash) has no such retry, so there the first `TAB`
+  only loads the completions and the next one uses them.
 - **Zsh** (`completions.zsh`): With `complete_aliases` unset (the default) zsh
   expands an alias before completing it, so wrappers inherit completion for
   free once compsys is active. The module only runs `compinit` (guarded so it
@@ -192,14 +229,14 @@ Aliases do not inherit their target command's completion automatically, so the
   database at `$DOTFILES/var/cache/zcompdump` (regenerable runtime state, hence
   `var/cache/`).
 - **Custom function wrappers** (`git_pull`/`git_push`/`git_nuke`,
-  `appledouble_clean`) have no command to inherit from, so both modules
-  hand-wire small completers: git refs (branches, plus remotes at the remote
-  position) read at completion time, and the `--dry-run`/`-n` flag for
+  `appledouble_clean`) have no command to inherit from, so both
+  modules hand-wire small completers: git refs (branches, plus remotes at the
+  remote position) read at completion time and the `--dry-run`/`-n` flag for
   `appledouble_clean`. Their aliases are covered too — bound explicitly in
   Bash, inherited via alias expansion in Zsh. Bindings are guarded so a
-  completer is wired only to targets that actually exist: `appledouble_clean`
-  (and its `adc` alias) is Linux-only, so on macOS it stays unbound while the
-  git wrappers, present on both platforms, always wire up.
+  completer is wired only to targets that actually exist: Linux-only wrappers
+  (and their aliases) stay unbound on macOS while the git wrappers, present on
+  both platforms, always wire up.
 
 ### OS-Specific Function Dispatch
 
@@ -213,15 +250,36 @@ The loader iterates `functions.d/*.sh` and filters by `$DOTFILES_OS`:
 The loader function (`__dotfiles_loader_functions`) is unset after use.
 
 OS-specific files provide the same function API as their counterpart on the other
-OS. For example, both `keyfiles_linux.sh` and `keyfiles_darwin.sh` define
-`keyfiles_mount()` and `keyfiles_unmount()`.
+OS: `<scope>_linux.sh` and `<scope>_darwin.sh` define the same `<scope>_*`
+functions. A scope may also combine a shared `<scope>.sh` with OS-specific
+files: `hash.sh` defines `hash_verify` on top of `hash_compute` from
+`hash_linux.sh` / `hash_darwin.sh`.
+
+The OS suffix restricts the platform, not the shell: `*_linux.sh` modules must
+still work in both Bash and Zsh.
+
+Each module is a scope: it defines only public functions named
+`<scope>_<action>[_<object>]` — scope is a noun, action a verb, and an object
+may follow when the verb alone is unclear (e.g., `git_pull`,
+`appledouble_clean`). Names must make scope and action
+immediately clear; common short forms are fine (e.g., `calc`), cryptic ones
+are not. Every function in a module ends up
+in the user's shell. Internal helpers live in `internals.sh` under the
+`__dotfiles_` prefix and follow the same scheme (e.g.,
+`__dotfiles_hash_lookup`). OS-specific helpers go into
+`internals_linux.sh` / `internals_darwin.sh` (e.g.,
+`__dotfiles_loop_find_attached`). `__dotfiles_*` helpers are internal to the
+dotfiles ecosystem (core and first-party extensions) and not meant for
+interactive use.
 
 ## Build and Test Commands
 
 ```
 make build              # Merge src/ into build/bash/ and build/zsh/ (dev)
-make lint               # ShellCheck + syntax checks (bash -n, zsh -n)
+make lint               # ShellCheck, bash -n, zsh -n, and repository conventions
 make smoke              # Load the built prefix in each shell and assert its API
+make test               # Build, then run test/ in Bash and Zsh (see Tests)
+make sandbox            # Run lint, build, smoke, test in a disposable container
 make install            # Symlink build/<shell>/ to OS install location
 make clean              # Selectively clean build/ (preserves opt/var contents)
 make bump LEVEL=patch   # Bump VERSION (patch/minor/major)
@@ -235,9 +293,48 @@ in `build/<shell>/opt/` and `build/<shell>/var/` (e.g., installed extensions
 or runtime state). Only derived files (etc/, home/, README.md seeds) are
 removed. The `build/` directory itself is only deleted if completely empty.
 
-Build scripts live in `libexec/` and are invoked via `Makefile`. Do not add a
+All tooling lives in `libexec/` and is invoked via `Makefile`. Do not add a
 `bin/` directory or put scripts on `$PATH`. `libexec/build` and `libexec/dist`
 share their core logic via `libexec/_common` (sourced, not executed).
+
+`make lint` also enforces the conventions below on every tracked or new file:
+ASCII only (Markdown and the prompt glyph excepted), a final newline, no
+trailing whitespace outside Markdown, and the executable bit on `libexec/`
+commands only.
+
+## Tests
+
+`make test` runs `test/` against the built prefix: `test/*.sh` in Bash and Zsh,
+`test/*.bash` and `test/*.zsh` only in their shell (Zsh is skipped when
+absent). Each file gets a fresh interactive shell with `rc.<shell>` loaded and
+stdin from `/dev/null`. Anything that shell writes to stderr outside a test
+fails the file, which also catches noisy modules.
+
+`make sandbox` runs lint, build, smoke, and test in a disposable Fedora
+container (podman, or docker as a fallback) with both shells. The repository is
+mounted read-only and copied inside, so the host's `build/` stays untouched.
+As root, the sandbox also runs the tests that need it (the VeraCrypt loader
+under `/media`); locally they are skipped.
+
+Writing tests:
+
+- A test is a function named `test_<topic>_<behavior>` defined at the start of
+  a line. Tests run in definition order, each in its own subshell with a fresh
+  `$TEST_TMP` as working directory. Exit status 0 passes, 77 skips, anything
+  else fails, so the last command must succeed.
+- Helpers from `test/_harness.sh`: `assert_eq ACTUAL EXPECTED`,
+  `assert_contains ACTUAL PART`, `fail MESSAGE`, `skip REASON`, `run_shell`
+  (runs a script from stdin in a fresh, non-interactive shell of the tested
+  kind), and `isolate_git` (empty git config and a fixed identity; always use
+  it before running git, so no test touches the user's setup).
+- File-local helpers use a `__<topic>_` prefix, never `test_`.
+- Capture output and status separately: `out="$(cmd 2>&1)"`, then
+  `assert_eq "$?" '1'`. `local out="$(cmd)"` would lose the status.
+- `*.sh` tests follow the `src/shared/` rules: no Zsh special parameter names
+  (`status`, `path`, ...) and no globs that may match nothing.
+- Gate platform- or privilege-specific tests with `skip` (e.g.,
+  `[[ "$DOTFILES_OS" == 'linux' ]] || skip 'linux only.'`). Never touch real
+  user data; tests work in `$TEST_TMP` or throwaway clones only.
 
 ## Build vs. Dist
 
@@ -253,7 +350,10 @@ but differ in intent:
 ### Release Process (Model B: tagged dist, clean main)
 
 Releases are orchestrated by `libexec/release <level>`, which runs locally and
-is wrapped by a `workflow_dispatch` GitHub Action. The orchestrator:
+is wrapped by a `workflow_dispatch` GitHub Action. It refuses to start unless
+the working tree is clean, the current branch is `main`, and the new tag does
+not exist yet. Any later failure rolls the branch back to its starting commit.
+The orchestrator:
 
 1. Bumps `VERSION` (`libexec/bump`).
 2. Stamps `CHANGELOG.md` with the new version and commits since the last tag
@@ -273,14 +373,23 @@ tooling — never edit it by hand.
 ## CI
 
 The GitHub Actions workflow `.github/workflows/check.yml` runs on pull requests
-targeting `main` and on manual dispatch. It runs `make lint`, `make build`, then
-`make smoke` on `ubuntu-latest` with Zsh installed.
+targeting `main` and on manual dispatch. The required job *Lint and Build* runs
+`make lint`, `make build`, `make smoke`, and `make test` on `ubuntu-latest`
+with Zsh installed (a world-writable `/media` enables the loader tests). The
+informational job *Build and Test (macOS)* runs build, smoke, and test on
+`macos-latest` with the system Bash 3.2 first in `PATH`. A new push to the same
+pull request cancels its runs still in progress.
 
 The `.github/workflows/release.yml` workflow (manual `workflow_dispatch`, with a
 `patch`/`minor`/`major` input) runs the release orchestrator. It restores the
 SSH signing key from the `SIGNING_KEY` secret and pushes as a repository admin
 via the `RELEASE_TOKEN` PAT — required because the `main` branch ruleset cannot
-grant a bypass to the default `GITHUB_TOKEN`.
+grant a bypass to the default `GITHUB_TOKEN`. The job only runs on `main`, one
+release at a time, in the `release` environment that holds both secrets.
+
+All actions are pinned to full commit SHAs (with the version as a comment), and
+`check.yml` runs with a read-only token. Dependabot keeps the pins current via
+monthly `ci(deps): ...` pull requests.
 
 ## Code Conventions
 
@@ -326,6 +435,9 @@ Single quotes around string literals signal "this is a fixed value, not a
 variable or expansion." Double quotes are for strings containing expansions.
 Maintain this convention consistently.
 
+Pseudo-booleans are the exception: bare `true` / `false`, checked with
+`[[ "$flag" == true ]]`. Unquoted, they read as booleans rather than strings.
+
 ### Function Style
 
 - Use `local` for all variables inside functions.
@@ -338,7 +450,8 @@ Maintain this convention consistently.
 ### User-Facing Output
 
 Functions that produce user-facing messages (errors, status, progress) follow
-a unified `printf` convention:
+a unified `printf` convention. The `libexec/` commands follow it too, with the
+command name as prefix (e.g., `build: done (version abc1234).`):
 
 - **Always use `printf`, never `echo`** for messages. `echo` is only acceptable
   in aliases where no flags are used.
@@ -349,26 +462,35 @@ a unified `printf` convention:
 - **Lowercase after the prefix.** No `Error:` or `Warning:` labels — the stderr
   routing and exit code convey severity.
 - **Errors go to stderr (`>&2`).** Informational/progress output goes to stdout.
+- **Punctuation:** sentences end with a period; a message ending in a dynamic
+  value (`: %s`) takes none; progress ends with `...`; a header introducing a
+  list ends with a colon.
 - **Indented sub-output is fine** for detail lines beneath a header message:
-  `printf '  source: %s\n' "$hash" >&2`. These do not need the function prefix.
+  `printf '  expected: %s\n' "$expected" >&2`. These do not need the function
+  prefix.
+- **Invalid arguments:** print `func: invalid arguments.`, then
+  `  usage: func ARGS` lines on stderr, and return 1.
+- **Prompts** are shown only when stdin is a terminal, written to and read from
+  `/dev/tty`, without a trailing newline.
 - **Data-only output** (consumed by other functions or prompts) uses plain
   `printf '%s' "$value"` without decoration or newline, unless the consumer
   expects newline-delimited records.
 
 ### File Extensions
 
-- `.sh` — shell-agnostic (bash + zsh compatible). Used in `src/shared/`.
-- `.bash` — bash-specific. Used in `src/bash/`.
-- `.zsh` — zsh-specific. Used in `src/zsh/`.
+- `.sh` — shell-agnostic (bash + zsh compatible). Used in `src/shared/` and
+  `test/`.
+- `.bash` — bash-specific. Used in `src/bash/` and `test/`.
+- `.zsh` — zsh-specific. Used in `src/zsh/` and `test/`.
 
 ### Formatting and File Modes
 
 - All files use two-space indentation (per `.editorconfig`), except the
   `Makefile`, which uses tabs as required by make.
 - Only the executable `libexec/` commands are `755` (`build`, `bump`,
-  `changelog`, `clean`, `dist`, `install`, `release`, `stamp`). Everything else
-  — sourced `src/` modules, `libexec/_common`, data files, and READMEs — is
-  `644`.
+  `changelog`, `clean`, `dist`, `install`, `lint`, `release`, `sandbox`,
+  `smoke`, `stamp`, `test`). Everything else — sourced `src/` modules,
+  `libexec/_common`, `test/` files, data files, and READMEs — is `644`.
 
 ### Internal Naming
 
@@ -389,8 +511,9 @@ a unified `printf` convention:
 
 ## What NOT to Do
 
-- Do not add an extension/package system. The `opt/` and `var/` directories and
-  `extensions.d/` activation model are planned for later.
+- Do not add extension tooling (install, enable, build pipelines). Extensions
+  are set up by hand for now (see [EXTENSIONS.md](EXTENSIONS.md)); the core
+  only loads what is linked into `var/dotfiles/extensions.d/`.
 - Do not add NVM, PNPM, or other tool-specific setup to the dotfiles. Those
   belong in the user's `~/.bashrc` until dedicated extensions exist.
 - Do not modify files in `build/` or `dist/`. They are generated artifacts.
@@ -407,9 +530,9 @@ a unified `printf` convention:
 
 These are documented for context only. Do not build any of this:
 
-- **Extension system:** Extensions install into `opt/<provider>/<name>/` and
-  activate via numbered symlinks in `var/dotfiles/extensions.d/`. Provider
-  namespace follows reverse-DNS (`dotfiles.christiangrete.com`).
+- **Extension tooling:** Commands to install, enable, disable, and uninstall
+  extensions in `opt/<provider>/<name>/` and `var/dotfiles/extensions.d/`.
+  Provider namespace follows reverse-DNS (`dotfiles.christiangrete.com`).
 - **Extension install pipeline:** Clone into `var/git/`, build, link into
   `opt/`, activate via symlink.
 - **Separate `dotfiles-min` project:** A standalone Rust project (own repo) that
@@ -418,3 +541,8 @@ These are documented for context only. Do not build any of this:
 - **Cloneless install:** Fetch a published release artifact and install it
   without cloning the repository. Currently `make install` requires a local
   clone.
+- **Single-call git prompt (only if the prompt ever feels slow):** Replace the
+  four to five `git` calls per prompt (`symbolic-ref`, `rev-parse`, two
+  `diff --quiet`, `ls-files --others`) with one
+  `git status --porcelain=v2 --branch` and parse branch, staged, unstaged, and
+  untracked state from its output. Measure in a large repository first.

@@ -11,7 +11,7 @@ __dotfiles_prompt_git_state() {
 
   # Any untracked files -> orange.
   local untracked
-  untracked="$(command git ls-files --others --exclude-standard 2> '/dev/null' | head -n 1)"
+  untracked="$(command git ls-files --others --exclude-standard 2> '/dev/null' | command head -n 1)"
   [[ -n "$untracked" ]] && return 2
 
   # Only staged/uncommitted changes -> green.
@@ -33,4 +33,28 @@ __dotfiles_prompt_git() {
   state=$?
 
   printf '%s\t%s\n' "$state" "$branch"
+}
+
+# Print the hash listed for a file name in a sha256sum-style hash file. Entries
+# read "<hash>  <name>" (text mode) or "<hash> *<name>" (binary mode).
+# Returns 1 if there is no entry.
+__dotfiles_hash_lookup() {
+  local name="$1"
+  local hash_file="$2"
+  local line hash
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    hash="${line:0:64}"
+    [[ "$hash" =~ ^[0-9a-f]{64}$ ]] || continue
+
+    case "${line:64}" in
+      "  $name" | " *$name")
+        printf '%s' "$hash"
+        return 0
+        ;;
+    esac
+  done < "$hash_file"
+
+  return 1
 }

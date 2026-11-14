@@ -1,4 +1,9 @@
 visual() {
+  if [[ -z "$VISUAL" ]]; then
+    printf 'visual: VISUAL is not set.\n' >&2
+    return 1
+  fi
+
   if [[ $# -lt 1 ]]; then
     "$VISUAL" '.'
     return

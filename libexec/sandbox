@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Run the full check (lint, build, smoke, test) in a disposable Fedora
+# container with Bash and Zsh, via podman or, failing that, docker. The
+# repository is mounted read-only and copied inside without build/ and dist/,
+# so nothing on the host changes. Root in the container enables the tests that
+# need it (e.g., the VeraCrypt loader under /media).
+
+image='registry.fedoraproject.org/fedora:latest'
+
+if command -v 'podman' > '/dev/null' 2>&1; then
+  engine='podman'
+elif command -v 'docker' > '/dev/null' 2>&1; then
+  engine='docker'
+else
+  printf 'sandbox: neither podman nor docker found.\n' >&2
+  exit 1
+fi
+
+# /tmp as tmpfs: fast, supports O_DIRECT, and allows test shims to execute.
+opts=('--rm' '--tmpfs' '/tmp:exec')
+
+# On SELinux hosts, read the mount without relabeling the host's files.
+if command -v 'selinuxenabled' > '/dev/null' 2>&1 && selinuxenabled; then
+  opts+=('--security-opt' 'label=disable')
+fi
+
+printf 'sandbox: running the checks in %s (%s).\n' "$image" "$engine"
+
+# shellcheck disable=SC2016 # expanded inside the container
+"$engine" run "${opts[@]}" -v "$REPO_DIR:/repo:ro" "$image" bash -c '
+    set -euo pipefail
+    if ! out="$(dnf -y -q --setopt=install_weak_deps=False install diffutils \
+      findutils git make openssh-clients ShellCheck tar util-linux-script zsh 2>&1)"; then
+      printf "%s\n" "$out" >&2
+      exit 1
+    fi
+    git config --global --add safe.directory "*"
+    mkdir /work
+    tar -C /repo --exclude=./build --exclude=./dist -cf - . | tar -C /work -xf -
+    cd /work
+    make lint build smoke test
+  '

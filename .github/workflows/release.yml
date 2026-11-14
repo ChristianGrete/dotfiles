@@ -15,12 +15,20 @@ on:
 permissions:
   contents: write
 
+# One release at a time: a second run waits instead of racing the version bump.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # Holds the secrets; restrict its deployment branches to main in the settings.
+    environment: release
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           # Push as the token owner (a repository admin) so the release commit
@@ -47,10 +55,12 @@ jobs:
           git config --global tag.gpgsign true
 
       - name: Run release
+        env:
+          LEVEL: ${{ inputs.level }}
         run: |
           chmod +x libexec/*
           libexec/changelog > "$RUNNER_TEMP/release_notes.md"
-          libexec/release '${{ inputs.level }}'
+          libexec/release "$LEVEL"
 
       - name: Push branch and tag
         run: |

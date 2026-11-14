@@ -2,20 +2,40 @@
 # Intended to be called once and then unset.
 
 __dotfiles_loader_veracrypt() {
-  local target="$1"
-  local dir file answer
+  # Prefixed locals: sourced files share this scope and must not clobber them.
+  local __dotfiles_loader_target="$1"
+  local __dotfiles_loader_dir __dotfiles_loader_file __dotfiles_loader_answer
+  local -a __dotfiles_loader_mounts=()
+  local __dotfiles_loader_traps=false
 
-  while IFS= read -r dir; do
-    file="${dir}/${target}"
-    [[ -r "$file" ]] || continue
+  # Only ask a user at a terminal; scripted shells (e.g., smoke tests) skip.
+  if [[ ! -t 0 ]] || ! { : < '/dev/tty'; } 2> '/dev/null'; then
+    return 0
+  fi
 
-    printf 'veracrypt: source %s? [y/N] ' "$file"
-    read -r answer < '/dev/tty'
-    printf '\n'
-    [[ "$answer" == [yY] ]] || continue
+  # Zsh binds EXIT traps set in functions to the function; keep them global.
+  if [[ -n "$ZSH_VERSION" && ! -o 'posix_traps' ]]; then
+    __dotfiles_loader_traps=true
+  fi
 
-    export __DOTFILES_LOADER_VERACRYPT_PATH="$dir"
-    . "$file"
+  # Collect first: a redirected loop would leak its stdin into sourced files.
+  while IFS= read -r __dotfiles_loader_dir; do
+    __dotfiles_loader_mounts+=("$__dotfiles_loader_dir")
+  done < <(command find '/media' -maxdepth 1 -name 'veracrypt*' -type d 2> '/dev/null' | command sort)
+
+  for __dotfiles_loader_dir in "${__dotfiles_loader_mounts[@]}"; do
+    __dotfiles_loader_file="${__dotfiles_loader_dir}/${__dotfiles_loader_target}"
+    [[ -r "$__dotfiles_loader_file" ]] || continue
+
+    printf 'veracrypt: source %s? [y/N] ' "$__dotfiles_loader_file" > '/dev/tty'
+    read -r __dotfiles_loader_answer < '/dev/tty'
+    printf '\n' > '/dev/tty'
+    [[ "$__dotfiles_loader_answer" == [yY] ]] || continue
+
+    export __DOTFILES_LOADER_VERACRYPT_PATH="$__dotfiles_loader_dir"
+    [[ "$__dotfiles_loader_traps" == true ]] && setopt 'posix_traps'
+    . "$__dotfiles_loader_file"
+    [[ "$__dotfiles_loader_traps" == true ]] && unsetopt 'posix_traps'
     unset __DOTFILES_LOADER_VERACRYPT_PATH
-  done < <(find '/media' -maxdepth 1 -name 'veracrypt*' -type d 2> '/dev/null' | command sort)
+  done
 }

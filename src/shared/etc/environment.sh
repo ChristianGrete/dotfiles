@@ -1,6 +1,9 @@
-VISUAL="$(command -v -- code)"
-export VISUAL
-export EDITOR="$VISUAL -w"
+# Keep the existing editor setup on hosts without VS Code (e.g., servers).
+if command -v 'code' > '/dev/null' 2>&1; then
+  VISUAL="$(command -v -- 'code')"
+  export VISUAL
+  export EDITOR="$VISUAL -w"
+fi
 
 export WORKSPACE="$HOME/Workspace"
 

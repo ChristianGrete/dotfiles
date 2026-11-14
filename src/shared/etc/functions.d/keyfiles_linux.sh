@@ -2,10 +2,13 @@ keyfiles_mount() {
   local container="${XDG_DATA_HOME:-$HOME/.local/share}/keyfiles"
   local mountpoint="/run/media/$USER/Keyfiles"
 
-  [[ -f "$container" ]] || return 1
+  if [[ ! -f "$container" ]]; then
+    printf 'keyfiles_mount: container not found: %s\n' "$container" >&2
+    return 1
+  fi
 
   # Prevent double-mount.
-  if mountpoint -q "$mountpoint" 2> '/dev/null'; then
+  if command mountpoint -q "$mountpoint" 2> '/dev/null'; then
     printf 'keyfiles_mount: already mounted.\n'
     return 0
   fi
@@ -26,7 +29,7 @@ keyfiles_mount() {
 
   # Determine the mapper device VeraCrypt assigned to this container.
   local mapper
-  mapper="$(sudo veracrypt -t --list "$container" 2> '/dev/null' | awk '{print $3}')"
+  mapper="$(sudo veracrypt -t --list "$container" 2> '/dev/null' | command awk '{print $3}')"
 
   if [[ -z "$mapper" || ! -e "$mapper" ]]; then
     printf 'keyfiles_mount: failed to determine mapper device.\n' >&2

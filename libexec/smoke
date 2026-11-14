@@ -8,10 +8,15 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 # this stays useful on machines without zsh while CI still exercises both.
 #
 # The shell must be interactive (-i) or completions.bash returns early via its
-# own guard. TERM_PROGRAM=vscode suppresses fastfetch during the run.
+# own guard. TERM_PROGRAM=vscode suppresses fastfetch during the run, and stdin
+# from /dev/null keeps the VeraCrypt loader from prompting.
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
 
 smoke_bash() {
   local prefix="$REPO_DIR/build/bash"
+  local rc=0
 
   if [[ ! -f "$prefix/home/rc.bash" ]]; then
     printf 'smoke: build/bash not found; run "make build" first.\n' >&2
@@ -22,11 +27,20 @@ smoke_bash() {
     . "$DOTFILES/home/rc.bash"
     fail() { printf "smoke(bash): %s.\n" "$1" >&2; exit 1; }
     [[ -n "$DOTFILES_OS" ]]              || fail "DOTFILES_OS unset (bootstrap)"
+    [[ "$DOTFILES_SHELL" == "bash" ]]    || fail "DOTFILES_SHELL not bash (bootstrap)"
+    [[ "$DOTFILES_EXTENSIONS" == "$DOTFILES/var/dotfiles/extensions.d" ]] \
+      || fail "DOTFILES_EXTENSIONS wrong (bootstrap)"
     declare -F git_branch > "/dev/null"  || fail "git_branch missing (functions)"
     alias gb > "/dev/null" 2>&1          || fail "gb alias missing (aliases)"
     complete -p gp > "/dev/null" 2>&1    || fail "gp completion missing (completions)"
     declare -F __dotfiles_prompt_command > "/dev/null" || fail "prompt not set up"
-  ' || return 1
+  ' < '/dev/null' 2> "$tmp/stderr" || rc=$?
+
+  # Bash notes a missing terminal for job control (e.g., CI); show the rest.
+  grep -v -e 'cannot set terminal process group' -e 'no job control in this shell' \
+    "$tmp/stderr" >&2 || true
+
+  [[ "$rc" -eq 0 ]] || return 1
 
   printf 'smoke: bash ok.\n'
 }
@@ -48,11 +62,14 @@ smoke_zsh() {
     . "$DOTFILES/home/rc.zsh"
     fail() { printf "smoke(zsh): %s.\n" "$1" >&2; exit 1; }
     [[ -n "$DOTFILES_OS" ]]                       || fail "DOTFILES_OS unset (bootstrap)"
+    [[ "$DOTFILES_SHELL" == "zsh" ]]              || fail "DOTFILES_SHELL not zsh (bootstrap)"
+    [[ "$DOTFILES_EXTENSIONS" == "$DOTFILES/var/dotfiles/extensions.d" ]] \
+      || fail "DOTFILES_EXTENSIONS wrong (bootstrap)"
     (( $+functions[git_branch] ))                 || fail "git_branch missing (functions)"
     alias gb > "/dev/null" 2>&1                   || fail "gb alias missing (aliases)"
     (( $+functions[compdef] ))                    || fail "compinit did not run (completions)"
     (( $+functions[__dotfiles_prompt_precmd] ))   || fail "prompt not set up"
-  ' || return 1
+  ' < '/dev/null' || return 1
 
   printf 'smoke: zsh ok.\n'
 }

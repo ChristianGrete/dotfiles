@@ -12,5 +12,4 @@ trim_trailing_whitespace = true
 indent_style = tab
 
 [*.md]
-indent_style = tab
 trim_trailing_whitespace = false

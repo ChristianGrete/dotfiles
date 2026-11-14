@@ -1,3 +1,4 @@
+# Dynamic text is referenced by name in PS1, so bash never expands its contents.
 __dotfiles_prompt_command() {
   local out state br sign
 
@@ -6,12 +7,19 @@ __dotfiles_prompt_command() {
   __dotfiles_prompt_sep=$'\n'
 
   # Compute display path for length check (replicates \w behavior).
-  local display_pwd="${PWD/#$HOME/\~}"
+  local display_pwd="$PWD"
+  if [[ "$PWD" == "$HOME" || "$PWD" == "$HOME/"* ]]; then
+    display_pwd="~${PWD#"$HOME"}"
+  fi
 
   # Non-printing sequences must be wrapped in \[ \] for bash.
   local c_reset='\[\033[0m\]'
   local c_dim='\[\033[2m\]'
-    local c_dim_bold='\[\033[2;1m\]'
+  local c_dim_bold='\[\033[2;1m\]'
+
+  # Without promptvars, bash never expands PS1, so text can be embedded as is.
+  local embed=false
+  shopt -q promptvars || embed=true
 
   # Git segment (optional).
   local git_line=""
@@ -19,6 +27,10 @@ __dotfiles_prompt_command() {
   if [[ -n "$out" ]]; then
     local IFS=$'\t'
     read -r state br <<< "$out"
+    __dotfiles_prompt_branch="$br"
+
+    local branch_text="\${__dotfiles_prompt_branch}"
+    [[ "$embed" == true ]] && branch_text="${br//\\/\\\\}"
 
     local c_green='\[\033[32m\]'
     local c_orange='\[\033[33m\]'
@@ -26,10 +38,10 @@ __dotfiles_prompt_command() {
     local c_bold='\[\033[1m\]'
 
     case "$state" in
-      0) git_line="${c_dim}└── ${c_dim_bold}${br}${c_reset}" ;;
-      1) git_line="${c_dim}└── ${c_reset}${c_green}${c_bold}${br}${c_reset}" ;;
-      2) git_line="${c_dim}└── ${c_reset}${c_orange}${c_bold}${br}${c_reset}" ;;
-      3) git_line="${c_dim}└── ${c_reset}${c_red}${c_bold}${br}${c_reset}" ;;
+      0) git_line="${c_dim}└── ${c_dim_bold}${branch_text}${c_reset}" ;;
+      1) git_line="${c_dim}└── ${c_reset}${c_green}${c_bold}${branch_text}${c_reset}" ;;
+      2) git_line="${c_dim}└── ${c_reset}${c_orange}${c_bold}${branch_text}${c_reset}" ;;
+      3) git_line="${c_dim}└── ${c_reset}${c_red}${c_bold}${branch_text}${c_reset}" ;;
     esac
   fi
 
@@ -52,8 +64,17 @@ __dotfiles_prompt_command() {
       pwd_parent+="/"
     fi
 
+    __dotfiles_prompt_parent="$pwd_parent"
+    __dotfiles_prompt_tail="$pwd_tail"
 
-    PS1="${sep}${c_dim}${pwd_parent}${c_reset}${c_dim_bold}${pwd_tail}${c_reset}"
+    local parent_text="\${__dotfiles_prompt_parent}"
+    local tail_text="\${__dotfiles_prompt_tail}"
+    if [[ "$embed" == true ]]; then
+      parent_text="${pwd_parent//\\/\\\\}"
+      tail_text="${pwd_tail//\\/\\\\}"
+    fi
+
+    PS1="${sep}${c_dim}${parent_text}${c_reset}${c_dim_bold}${tail_text}${c_reset}"
     [[ -n "$git_line" ]] && PS1+=$'\n'"${git_line}"
     PS1+=$'\n\n'"${c_dim}${sign}${c_reset} "
   fi

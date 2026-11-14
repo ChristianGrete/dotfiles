@@ -7,10 +7,6 @@ if command -v 'appledouble_clean' > '/dev/null' 2>&1; then
   alias adc='appledouble_clean'
 fi
 
-if command -v 'buffer_backup' > '/dev/null' 2>&1; then
-  alias bb='buffer_backup'
-fi
-
 if command -v 'clear' > '/dev/null' 2>&1; then
   alias c='clear && unset __dotfiles_prompt_sep'
 else
@@ -47,6 +43,8 @@ alias gp='git_push'
 alias gsh='git show'
 alias gsha='git_hash'
 alias gst='git status'
+alias hc='hash_compute'
+alias hv='hash_verify'
 alias km='keyfiles_mount'
 alias ku='keyfiles_unmount'
 alias ll='ls -Fal'
